@@ -289,7 +289,7 @@ void pushScopeToScopeStack(scopeNode** scope_stack_top, node* params, node** sta
 	if (params){
 		pushSymbols(params); 
 	}
-	pushScopeStatements(statements, stat_size); // TODO continue
+	pushScopeStatements(statements, stat_size); // TODO continue (changed pushSymbols and addSymbolToSymbolTable)
 }
 
 /**
@@ -407,38 +407,33 @@ void pushSymbols(node* var_declaration_nosde){
 	}
 }
 
-/**
- * addSymbolToSymbolTable - Adds a symbol to the symbol table.
- * @param scope_stack_top: The scope_stack_top of the scope stack.
- * @param id: The identifier of the symbol.
- * @param type: The type of the symbol.
- * @param data: Additional data for the symbol.
- * @param isFunc: Indicates if the symbol is a function.
- * @param params: The parameters of the function, if any.
- * @param isStatic: Indicates if the function is static.
- */
 void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, char* data, int is_func, int is_static, node* params) {
 	symbolNode* new_node = (symbolNode*) malloc(sizeof(symbolNode));
-	new_node->isFunc = is_func;
-	new_node->isStatic = is_static;
+	new_node->next =(*scope_stack_top)->symbolTable;
+	(*scope_stack_top)->symbolTable = new_node;
+
 	new_node->id = (char*)(malloc (sizeof(symbol_id) + 1));
 	strncpy(new_node->id, symbol_id, sizeof(symbol_id)+1);
+
+	new_node->type = (char*)(malloc (sizeof(symbol_type) + 1));
+	strncpy(new_node->type, symbol_type, sizeof(symbol_type)+1);
+
 	if (data != NULL) {
 		new_node->data = (char*)(malloc (sizeof(data) + 1));
 		strncpy(new_node->data, data, sizeof(data)+1);
 	}
 	else
 		new_node->data = NULL;
-	new_node->type = (char*)(malloc (sizeof(symbol_type) + 1));
-	strncpy(new_node->type, symbol_type, sizeof(symbol_type)+1);
+
+	new_node->is_func = is_func;
+	new_node->is_static = is_static;
+	
 	if (params != NULL) {
 		new_node->params = (node*)(malloc(sizeof(node)));
 		memcpy(new_node->params, params, sizeof(node));
 	}
 	else
-		new_node->params = NULL;
-	new_node->next =(*scope_stack_top)->symbolTable;
-	(*scope_stack_top)->symbolTable = new_node;
+		new_node->params = NULL;	
 }
 
 /**
@@ -782,7 +777,7 @@ void checkSymbols(scopeNode* scope){
         s2 = s1->next;
         while (s2 != NULL){
             if (!strcmp(s1->id, s2->id)){
-                if (s1->isFunc){
+                if (s1->is_func){
                     printf ("Re-declaration of function (%s)\n", s1->id);
 					exit(1);
 				}
@@ -830,7 +825,7 @@ void checkStaticNonStaticCalls() {
                 symbolNode* callingFuncSymbol = scopeSearch(func_called[i]);
 
                 if (callingFuncSymbol != NULL) {
-                    if (callingFuncSymbol->isStatic && !calledFuncSymbol->isStatic) {
+                    if (callingFuncSymbol->is_static && !calledFuncSymbol->is_static) {
                         printf("Error: Static function '%s' cannot call non-static function '%s'.\n", callingFuncSymbol->id, func_has_been_called[j]);
                         exit(1);
                     }
@@ -860,7 +855,7 @@ void checkMainNonStaticCalls(node* tree) {
     if (strcmp(token, "FUNC_CALL") == 0) {
         if (inMain) {
             symbolNode* calledFuncSymbol = scopeSearch(tree->nodes[0]->token);
-            if (calledFuncSymbol != NULL && !calledFuncSymbol->isStatic) {
+            if (calledFuncSymbol != NULL && !calledFuncSymbol->is_static) {
                 printf("Error: 'main' function cannot call non-static function '%s'.\n", calledFuncSymbol->id);
                 exit(1);
             }

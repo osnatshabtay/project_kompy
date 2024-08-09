@@ -2,6 +2,8 @@
 #define SEMANTIC_ANALYSIS_H
 
 // TODO - chage param order
+// TODO - change all varNames to var_names
+// TODO - pretiffy order of function declaration
 
 /* Define node structure for the abstract syntax tree (AST) - Part 1 */
 typedef struct node {
@@ -15,8 +17,8 @@ typedef struct node {
 
 /* Define Symonl Table structures - Part 2 */
 typedef struct symbolNode {
-    int isFunc;
-    int isStatic;
+    int is_func;
+    int is_static;
     char* id;
     char* type;
     char* data;
