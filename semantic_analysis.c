@@ -184,8 +184,8 @@ void pushStatementToStack(node* root, int scope_level){
 					printf("Error: Line %d: FOR initialization requires an 'INT' type.\n", root->nodes[0]->line);
 					exit(1);
 				}
-				char* evalType = evaluateExpression(root->nodes[1]);
-				if(strcmp("BOOL" ,evalType)){
+				char* exp_type = evaluateExpression(root->nodes[1]);
+				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: FOR-condition requires return type 'BOOL'.\n", root->nodes[0]->line);
 					exit(1);
 				}
@@ -209,8 +209,8 @@ void pushStatementToStack(node* root, int scope_level){
 			if (!strcmp(root->token, "WHILE")) {
 				scope_level++;
 				pushScopeToStack(&topStack, NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
-				char* evalType = evaluateExpression(root->nodes[0]);
-				if(strcmp("BOOL" ,evalType)){
+				char* exp_type = evaluateExpression(root->nodes[0]);
+				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid WHILE condition. Expected return type 'BOOL'.\n", root->line);
 					exit(1);
 				}
@@ -221,8 +221,8 @@ void pushStatementToStack(node* root, int scope_level){
 			if (!strcmp(root->token, "DO-WHILE")) {
 				scope_level++;
 				pushScopeToStack(&topStack, NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
-				char* evalType = evaluateExpression(root->nodes[1]);
-				if(strcmp("BOOL" ,evalType)){
+				char* exp_type = evaluateExpression(root->nodes[1]);
+				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid DO-WHILE condition. Expected return type 'BOOL'.\n", root->line);
 					exit(1);
 				}
@@ -248,8 +248,8 @@ void pushStatementToStack(node* root, int scope_level){
 			if (!strcmp(root->token, "IF")) {
 				scope_level++;
 				pushScopeToStack(&topStack, NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
-				char* evalType = evaluateExpression(root->nodes[0]);
-				if(strcmp("BOOL" ,evalType)){
+				char* exp_type = evaluateExpression(root->nodes[0]);
+				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid IF condition. Expected return type 'BOOL'.\n",root->line);
 					exit(1);
 				}
@@ -283,11 +283,11 @@ void pushStatementToStack(node* root, int scope_level){
  */
 void pushScopeToStack(scopeNode** top, node* params, node** statements, int scope_level, int stat_size){      
 	scopeNode* new_scope = (scopeNode*) malloc(sizeof(scopeNode));
-	new_scope->scopeLevel=scope_level-1;
+	new_scope->scopeLevel = scope_level-1;
 	new_scope->next = (*top);
 	(*top) = new_scope;
 	if (params){
-		pushSymbols(params);
+		pushSymbols(params); 
 	}
 	pushScopeStatements(statements, stat_size);
 }
@@ -345,69 +345,65 @@ void pushScopeStatements(node** statements, int size){
 	}
 }
 
-/**
- * pushSymbols - Pushes symbol nodes from a declaration node.
- * @param decleration: The declaration node containing symbols.
- */
-void pushSymbols(node* decleration){
-	for(int i = 0; i<decleration->count;i++){
-		pushNodesToSymtable(decleration->nodes[i]->token, decleration->nodes[i]->nodes, decleration->nodes[i]->count);
-	}
-}
+// declaration
+void pushSymbols(node* var_decleration_node){
+	int i;
+	int j;
+	for(i = 0; i<var_decleration_node->count; i++){
 
-/**
- * pushNodesToSymtable - Adds nodes to the symbol table.
- * @param type: The type of the variables.
- * @param vars: The variables to add.
- * @param size: The number of variables.
- */
-void pushNodesToSymtable(char* type, node** vars, int size){
-	for(int i = 0;i < size; i++){
-		if (strcmp(vars[i]->token, "<-") && strcmp(type, "STRING") == 0){
-			char* evalType = evaluateExpression(vars[i]->nodes[0]->nodes[0]);
-			if(strcmp("INT", evalType)){
-				printf("Error: Line %d: Size of string must be type 'INT' not '%s'\n", vars[i]->line, evalType);
-				exit(1);
-			}
-			else
-				pushToTable(&topStack, vars[i]->token, type, NULL, 0, NULL, 0);
-		}
-		else if ((!strcmp(vars[i]->token, "<-") && strcmp(type, "STRING") == 0)){
-			char* evalType = evaluateExpression(vars[i]->nodes[0]->nodes[0]->nodes[0]);
-			if(strcmp("INT", evalType)){
-				printf("Error: Line %d: Size of string must be type 'INT' not '%s'\n", vars[i]->nodes[0]->line, evalType);
-				exit(1);
-			}
-			else {
-				evalType = evaluateExpression(vars[i]->nodes[1]);
-				if (!strcmp(type,evalType))
-					pushToTable(&topStack, vars[i]->nodes[0]->token, type, vars[i]->nodes[1]->token, 0, NULL, 0);
-				else{
-					printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars[i]->nodes[0]->line, evalType, type);
+		int num_of_vars = var_decleration_node->nodes[i]->count;
+		char* var_type = var_decleration_node->nodes[i]->token;
+		node** vars_declared = var_decleration_node->nodes[i]->nodes;
+
+		for(int j = 0; j < num_of_vars; j++){
+			if ((!strcmp(vars_declared[j]->token, "<-") && vars_declared[j]->nodes[1]->node_type != NULL && !strcmp("NULL", vars_declared[j]->nodes[1]->node_type)))
+				if (strcmp(var_type, "INT*") && strcmp(var_type, "CHAR*") && strcmp(var_type, "DOUBLE*") && strcmp(var_type, "FLOAT*")){
+					printf("Error: Line %d: Assignment type mismatch: can not assign NULL to %s\n", vars_declared[j]->line, var_type);
 					exit(1);
 				}
-			}
-		}
-
-		else if ((!strcmp(vars[i]->token, "<-") && vars[i]->nodes[1]->node_type != NULL && !strcmp("NULL", vars[i]->nodes[1]->node_type)))
-			if (strcmp(type, "INT*") && strcmp(type, "CHAR*") && strcmp(type, "DOUBLE*") && strcmp(type, "FLOAT*")){
-				printf("Error: Line %d: Assignment type mismatch: can not assign NULL to %s\n", vars[i]->line, type);
-				exit(1);
-			}
-			else
-				pushToTable(&topStack, vars[i]->nodes[0]->token, type, vars[i]->nodes[1]->token, 0, NULL, 0);
-		else{
-			if (strcmp(vars[i]->token, "<-"))
-				pushToTable(&topStack, vars[i]->token, type, NULL, 0, NULL, 0);
-			else{
-				char* evalType = evaluateExpression(vars[i]->nodes[1]);
-				if (!strcmp(type,evalType))
-					pushToTable(&topStack, vars[i]->nodes[0]->token, type, vars[i]->nodes[1]->token, 0, NULL, 0);
+				else
+					pushToTable(&topStack, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, NULL, 0);
+			
+			else if ((!strcmp(vars_declared[j]->token, "<-") && strcmp(var_type, "STRING") == 0)){
+				char* exp_type = evaluateExpression(vars_declared[j]->nodes[0]->nodes[0]->nodes[0]);
+				if(strcmp("INT", exp_type)){
+					printf("Error: Line %d: Size of string must be type 'INT' not '%s'\n", vars_declared[j]->nodes[0]->line, exp_type);
+					exit(1);
+				}
 				else {
-					printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars[i]->nodes[0]->line, evalType, type);
+					exp_type = evaluateExpression(vars_declared[j]->nodes[1]);
+					if (!strcmp(var_type, exp_type))
+						pushToTable(&topStack, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, NULL, 0);
+					else{
+						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->nodes[0]->line, exp_type, var_type);
+						exit(1);
+					}
+				}
+			}
+
+			else if (strcmp(vars_declared[j]->token, "<-") && strcmp(var_type, "STRING") == 0){
+				char* exp_type = evaluateExpression(vars_declared[j]->nodes[0]->nodes[0]);
+				if(strcmp("INT", exp_type)){
+					printf("Error: Line %d: Size of string must be type 'INT' not '%s'\n", vars_declared[j]->line, exp_type);
 					exit(1);
 				}
-			}	
+				else
+					pushToTable(&topStack, vars_declared[j]->token, var_type, NULL, 0, NULL, 0);
+			}
+			
+			else{
+				if (strcmp(vars_declared[j]->token, "<-"))
+					pushToTable(&topStack, vars_declared[j]->token, var_type, NULL, 0, NULL, 0);
+				else{
+					char* exp_type = evaluateExpression(vars_declared[j]->nodes[1]);
+					if (!strcmp(var_type, exp_type))
+						pushToTable(&topStack, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, NULL, 0);
+					else {
+						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->nodes[0]->line, exp_type, var_type);
+						exit(1);
+					}
+				}	
+			}
 		}
 	}
 }
