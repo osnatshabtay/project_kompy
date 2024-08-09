@@ -24,7 +24,6 @@ typedef struct symbolNode {
 } symbolNode;
 
 typedef struct scopeNode{
-	int scopeNum;
 	int scopeLevel;
 	symbolNode *symbolTable;
 	struct scopeNode *next;

@@ -4,7 +4,6 @@
 
 /* Global variables */
 scopeNode* topStack = NULL;
-int GlobalScope = 0;
 int mainCounter = 0;
 char* currentFunction = NULL;
 char* func_called[256];
@@ -284,8 +283,6 @@ void pushStatementToStack(node* root, int scope_level){
  */
 void pushScopeToStack(scopeNode** top, node* params, node** statements, int scope_level, int stat_size){      
 	scopeNode* new_scope = (scopeNode*) malloc(sizeof(scopeNode));
-	GlobalScope++;
-	new_scope->scopeNum = GlobalScope;
 	new_scope->scopeLevel=scope_level-1;
 	new_scope->next = (*top);
 	(*top) = new_scope;
@@ -439,7 +436,6 @@ void pushToTable(scopeNode** top, char* id, char* type, char* data, int isFunc, 
 		new_node->data = NULL;
 	new_node->type = (char*)(malloc (sizeof(type) + 1));
 	strncpy(new_node->type, type, sizeof(type)+1);
-	new_node->scopeID=(*top)->scopeNum;
 	if (params != NULL) {
 		new_node->params = (node*)(malloc(sizeof(node)));
 		memcpy(new_node->params, params, sizeof(node));
