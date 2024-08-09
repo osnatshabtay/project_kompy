@@ -44,8 +44,8 @@ void freeNode(node* node_to_free, int free_sons);
 
 /* Semantic Check - Part 2 */
 void semanticAnalysis(node* root);
-void pushStat(node* root, int level);
-void pushScopeToStack(scopeNode** topStack, char* name, node* params, node** statments, int level, int stat_size);
+void pushStatementToStack(node* root, int scope_level);
+void pushScopeToStack(scopeNode** topStack, char* name, node* params, node** statments, int scope_level, int stat_size);
 void pushScopeStatements(node** statements, int size);
 void pushSymbols(node* decleration);
 void pushNodesToSymtable(char* type, node** vars, int size);
