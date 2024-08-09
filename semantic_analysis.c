@@ -345,15 +345,14 @@ void pushScopeStatements(node** statements, int size){
 	}
 }
 
-// declaration
-void pushSymbols(node* var_decleration_node){
+void pushSymbols(node* var_declaration_nosde){
 	int i;
 	int j;
-	for(i = 0; i<var_decleration_node->count; i++){
+	for(i = 0; i<var_declaration_nosde->count; i++){
 
-		int num_of_vars = var_decleration_node->nodes[i]->count;
-		char* var_type = var_decleration_node->nodes[i]->token;
-		node** vars_declared = var_decleration_node->nodes[i]->nodes;
+		int num_of_vars = var_declaration_nosde->nodes[i]->count;
+		char* var_type = var_declaration_nosde->nodes[i]->token;
+		node** vars_declared = var_declaration_nosde->nodes[i]->nodes;
 
 		for(int j = 0; j < num_of_vars; j++){
 			if ((!strcmp(vars_declared[j]->token, "<-") && vars_declared[j]->nodes[1]->node_type != NULL && !strcmp("NULL", vars_declared[j]->nodes[1]->node_type)))

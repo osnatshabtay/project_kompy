@@ -45,7 +45,7 @@ void semanticAnalysis(node* root);
 void pushStatementToStack(node* root, int scope_level);
 void pushScopeToStack(scopeNode** topStack, node* params, node** statments, int scope_level, int stat_size);
 void pushScopeStatements(node** statements, int size);
-void pushSymbols(node* var_decleration_node);
+void pushSymbols(node* var_declaration_nosde);
 void pushToTable(scopeNode** top, char* id, char* type, char* data, int isFunc, node* params, int isStatic);
 int isDeclared(char* id);
 symbolNode* symbolSearch (symbolNode* symTable, char* id);
