@@ -24,7 +24,6 @@ typedef struct symbolNode {
 } symbolNode;
 
 typedef struct scopeNode{
-	char* scopeName;
 	int scopeNum;
 	int scopeLevel;
 	symbolNode *symbolTable;
@@ -45,7 +44,7 @@ void freeNode(node* node_to_free, int free_sons);
 /* Semantic Check - Part 2 */
 void semanticAnalysis(node* root);
 void pushStatementToStack(node* root, int scope_level);
-void pushScopeToStack(scopeNode** topStack, char* name, node* params, node** statments, int scope_level, int stat_size);
+void pushScopeToStack(scopeNode** topStack, node* params, node** statments, int scope_level, int stat_size);
 void pushScopeStatements(node** statements, int size);
 void pushSymbols(node* decleration);
 void pushNodesToSymtable(char* type, node** vars, int size);
@@ -65,9 +64,6 @@ void checkMainNonStaticCalls(node* tree);
 int checkFunctionArgs(node* params, node* callArgs);
 void checkString(node* strNode, char* assType);
 void findFunctionsCalled(node* astNode);
-void setFatherForStatements(node** statements, int size, char* fatherName);
-void setFatherForChildNodes(node* root, char* fatherName);
-void printScopes(struct scopeNode *node);
 void printSymbolTable(struct scopeNode *node);
 
 #endif 

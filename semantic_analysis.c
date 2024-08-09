@@ -174,12 +174,12 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'F': // FUNCTION or FOR
 			if (!strcmp(root->token, "FUNCTION")) {
 				scope_level++;
-				pushScopeToStack(&topStack,"FUNCTION",root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
+				pushScopeToStack(&topStack, root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
 				checkFuncReturn(root);
 			}
 			else if (!strcmp(root->token, "FOR")) {
 				scope_level++;
-				pushScopeToStack(&topStack, "FOR" ,NULL, root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
+				pushScopeToStack(&topStack, NULL, root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
 				char* initType = evaluateExpression(root->nodes[0]);
 				if(strcmp("INT" ,initType)){
 					printf("Error: Line %d: FOR initialization requires an 'INT' type.\n", root->nodes[0]->line);
@@ -201,7 +201,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'S': // STATIC-FN
 			if (!strcmp(root->token, "STATIC-FN")) {
 				scope_level++;
-				pushScopeToStack(&topStack,"STATIC-FN",root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
+				pushScopeToStack(&topStack, root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
 				checkFuncReturn(root);
 			}
 			break;
@@ -209,7 +209,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'W': // WHILE
 			if (!strcmp(root->token, "WHILE")) {
 				scope_level++;
-				pushScopeToStack(&topStack, "WHILE" ,NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
+				pushScopeToStack(&topStack, NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
 				char* evalType = evaluateExpression(root->nodes[0]);
 				if(strcmp("BOOL" ,evalType)){
 					printf("Error: Line %d: Invalid WHILE condition. Expected return type 'BOOL'.\n", root->line);
@@ -221,7 +221,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'D': // DO-WHILE
 			if (!strcmp(root->token, "DO-WHILE")) {
 				scope_level++;
-				pushScopeToStack(&topStack, "DO-WHILE" ,NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
+				pushScopeToStack(&topStack, NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
 				char* evalType = evaluateExpression(root->nodes[1]);
 				if(strcmp("BOOL" ,evalType)){
 					printf("Error: Line %d: Invalid DO-WHILE condition. Expected return type 'BOOL'.\n", root->line);
@@ -233,7 +233,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'C': // CODE
 			if (!strcmp(root->token, "CODE")) {
 				scope_level++;
-        		pushScopeToStack(&topStack, "GLOBAL" ,NULL, root->nodes, scope_level, root->count);
+        		pushScopeToStack(&topStack, NULL, root->nodes, scope_level, root->count);
 			}
 			break;
 
@@ -241,14 +241,14 @@ void pushStatementToStack(node* root, int scope_level){
 			if (!strcmp(root->token, "MAIN")) {
 				scope_level++;
 				mainCounter++;
-				pushScopeToStack(&topStack, "MAIN", NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
+				pushScopeToStack(&topStack, NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
 			}
 			break;
 
 		case 'I': // IF
 			if (!strcmp(root->token, "IF")) {
 				scope_level++;
-				pushScopeToStack(&topStack, "IF" ,NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
+				pushScopeToStack(&topStack, NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
 				char* evalType = evaluateExpression(root->nodes[0]);
 				if(strcmp("BOOL" ,evalType)){
 					printf("Error: Line %d: Invalid IF condition. Expected return type 'BOOL'.\n",root->line);
@@ -260,7 +260,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'B': // BLOCK
 			if (!strcmp(root->token, "BLOCK")) {
 				scope_level++;
-				pushScopeToStack(&topStack, "BLOCK" ,NULL, root->nodes, scope_level, root->count);
+				pushScopeToStack(&topStack, NULL, root->nodes, scope_level, root->count);
 			}
 			break;
 
@@ -282,10 +282,8 @@ void pushStatementToStack(node* root, int scope_level){
  * @param scope_level: The scope scope_level.
  * @param stat_size: The number of statements in the scope.
  */
-void pushScopeToStack(scopeNode** top, char* name, node* params, node** statements, int scope_level, int stat_size){      
+void pushScopeToStack(scopeNode** top, node* params, node** statements, int scope_level, int stat_size){      
 	scopeNode* new_scope = (scopeNode*) malloc(sizeof(scopeNode));
-	new_scope->scopeName = (char*)(malloc (sizeof(name) + 1));
-	strncpy(new_scope->scopeName, name, sizeof(name)+1);
 	GlobalScope++;
 	new_scope->scopeNum = GlobalScope;
 	new_scope->scopeLevel=scope_level-1;
@@ -294,7 +292,6 @@ void pushScopeToStack(scopeNode** top, char* name, node* params, node** statemen
 	if (params){
 		pushSymbols(params);
 	}
-	setFatherForStatements(statements, stat_size, name); // New function to set 'father'
 	pushScopeStatements(statements, stat_size);
 }
 
@@ -973,37 +970,6 @@ void findFunctionsCalled(node* tree) {
 }
 
 /**
- * setFatherForStatements - Assigns a father (parent function) to each statement in the AST.
- * This function sets the father attribute for an array of statement nodes, assigning them to a specific function
- * or block. It recursively updates the father attribute for all child nodes of each statement.
- * @param statements: Array of AST nodes representing statements.
- * @param size: Number of statements in the array.
- * @param fatherName: The name of the parent function or block.
- */
-void setFatherForStatements(node** statements, int size, char* fatherName) {
-    for (int i = 0; i < size; i++) {
-        statements[i]->father = fatherName;
-        setFatherForChildNodes(statements[i], fatherName);
-    }
-}
-
-/**
- * setFatherForChildNodes - Recursively sets the father attribute for all child nodes.
- * This function assigns the father attribute to all child nodes of a given AST node, indicating the parent function
- * or block for proper scope management and analysis.
- * @param root: The root AST node whose children will be updated.
- * @param fatherName: The name of the parent function or block.
- */
-void setFatherForChildNodes(node* root, char* fatherName) {
-    if (root == NULL) return;
-
-    root->father = fatherName;
-    for (int i = 0; i < root->count; i++) {
-        setFatherForChildNodes(root->nodes[i], fatherName);
-    }
-}
-
-/**
  * printSymbolTable - Prints the symbol table for debugging and analysis.
  * This function traverses the symbol table from the top scope and prints information about each symbol,
  * including its identifier, type, value, and the scope in which it is declared. It helps visualize the structure
@@ -1023,20 +989,5 @@ void printSymbolTable(scopeNode *node)
 		}
 	currentScope=currentScope->next;       
 	}
-}
-
-/**
- * printScopes - Prints information about all scopes in the program.
- * This function prints details about each scope, including its name, number, and scope_level in the hierarchy.
- * It provides a summary of all scopes, aiding in understanding the scope structure and scope-specific details.
- * @param node: The top scope node in the scope hierarchy.
- */
-void printScopes(scopeNode *node){
-    scopeNode *current=node;
-    while (current != NULL)	{
-		printf("Scope ID: %s\t|\tScope Number: %d\t|\tScope Level: %d\n", current->scopeName,current->scopeNum,current->scopeLevel);
-		current = current->next;
-	}
-    printf("Total Scopes: %d\n",GlobalScope);
 }
 
