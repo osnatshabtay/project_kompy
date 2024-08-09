@@ -26,80 +26,6 @@ node* makeNode(char* token) {
 	return newnode;
 }
 
-void freeNode(node* node_to_free, int free_sons){
-	if (!node_to_free)
-		return;
-
-	int i;
-	for(i = 0; i < node_to_free->count && free_sons == 1; i++){
-		free(node_to_free->nodes[i]);
-	}
-
-	free(node_to_free);
-}
-
-
-void addSonNodeToFatherNode(node** father, node* son) {
-	// maloc
-	// set son
-	// add to number of sons
-
-	if (!father || !(*father) || !son){
-		return;
-	}
-	if ((*father)->count != 0) {
-		(*father)->nodes = (node**)realloc((*father)->nodes, ((*father)->count+1)*sizeof(node*));
-		(*father)->nodes[(*father)->count] = son;
-		(*father)->count++;
-	}
-	else {
-		(*father)->nodes = (node**)malloc(sizeof(node*));
-		(*father)->nodes[(*father)->count] = son;
-		(*father)->count++;
-	}
-}
-
-void addSonsToFatherNode(node* father, node* sons){
-	addSonNodeToFatherNode(&father, sons);
-	for (int i = 0; i < sons->count; i++){
-		addSonNodeToFatherNode(&father, sons->nodes[i]);
-	}
-	
-}
-
-void printTree(node* tree, int num_of_spaces) {
-	int i;
-	int j;
-	int spaces_multiplier = 3; // to emphesize spaces between each line/scope
-	char* curr_token = tree->token;
-	
-	if (!*curr_token) {
-		num_of_spaces -= 1;
-	}
-	else{
-		for (i = 0; i < num_of_spaces; i++) {
-			for(j = 0; j < spaces_multiplier; j++){
-				printf(" ");
-			}
-		}
-		printf("(%s\n", curr_token);
-	}
-
-	if (tree->nodes) {
-		for (int j = 0; j < tree->count; j++) {
-			printTree(tree->nodes[j], num_of_spaces + 1);
-		}
-	}
-
-	for (i = 0; i < num_of_spaces; i++) {
-		for(j = 0; j < spaces_multiplier; j++){
-				printf(" ");
-			}
-	}
-	if (*curr_token)
-		printf(")\n");
-}
-
 node* combineNodes(char* token, node* first_node, node* second_node) {
 	if(!first_node){
 		return second_node;
@@ -140,33 +66,91 @@ node* combineNodes(char* token, node* first_node, node* second_node) {
 	return combined_node;
 }
 
-/**
- * addList - Adds a list of nodes to the root node.
- * @param root: The root node to which the list will be added.
- * @param arr: The array of nodes to add to the root.
- */
-void addList(node* root, node* arr){
-	if (arr->count == 0){
-		addSonNodeToFatherNode(&root, arr);
+void addSonNodeToFatherNode(node** father, node* son) {
+	// maloc
+	// set son
+	// add to number of sons
+
+	if (!father || !(*father) || !son){
+		return;
 	}
-	else{
-		for (int i = 0; i < arr->count; i++){
-			addSonNodeToFatherNode(&root, arr->nodes[i]);
-		}
+	if ((*father)->count != 0) {
+		(*father)->nodes = (node**)realloc((*father)->nodes, ((*father)->count+1)*sizeof(node*));
+		(*father)->nodes[(*father)->count] = son;
+		(*father)->count++;
+	}
+	else {
+		(*father)->nodes = (node**)malloc(sizeof(node*));
+		(*father)->nodes[(*father)->count] = son;
+		(*father)->count++;
 	}
 }
 
-void makeNodesList(node* father, node* son) {
-	if(!son){
-		printf("\n\nERROR\n\nson is null");
-		return;
+void addSonsNodesToFatherNode(node* father, node* sons){
+	addSonNodeToFatherNode(&father, sons);
+	for (int i = 0; i < sons->count; i++){
+		addSonNodeToFatherNode(&father, sons->nodes[i]);
 	}
-	node* tmp = son;
-	while (tmp->nodes) {
-		addSonNodeToFatherNode(&father, makeNode(tmp->token));
-		tmp = tmp->nodes[0];
+	
+}
+
+void addNodesList(node* add_to, node* to_add){
+	if (to_add->count != 0){
+		int i;
+		for (i = 0; i < to_add->count; i++){
+			addSonNodeToFatherNode(&add_to, to_add->nodes[i]);
+		}
+	}
+	else{
+		addSonNodeToFatherNode(&add_to, to_add);
 	}
 }
+
+void printTree(node* curr_node, int num_of_spaces) {
+	int i;
+	int j;
+	int spaces_multiplier = 3; // to emphesize spaces between each line/scope
+	char* curr_token = curr_node->token;
+	
+	if (!*curr_token) {
+		num_of_spaces -= 1;
+	}
+	else{
+		for (i = 0; i < num_of_spaces; i++) {
+			for(j = 0; j < spaces_multiplier; j++){
+				printf(" ");
+			}
+		}
+		printf("(%s\n", curr_token);
+	}
+
+	if (curr_node->nodes) {
+		for (int j = 0; j < curr_node->count; j++) {
+			printTree(curr_node->nodes[j], num_of_spaces + 1);
+		}
+	}
+
+	for (i = 0; i < num_of_spaces; i++) {
+		for(j = 0; j < spaces_multiplier; j++){
+				printf(" ");
+			}
+	}
+	if (*curr_token)
+		printf(")\n");
+}
+
+void freeNode(node* node_to_free, int free_sons){
+	if (!node_to_free)
+		return;
+
+	int i;
+	for(i = 0; i < node_to_free->count && free_sons == 1; i++){
+		free(node_to_free->nodes[i]);
+	}
+
+	free(node_to_free);
+}
+
 
 /* Semantic Check - Part 2 */
 

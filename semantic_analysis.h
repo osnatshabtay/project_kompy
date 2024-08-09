@@ -34,12 +34,13 @@ typedef struct scopeNode{
 /* Functions declarations */
 /* AST - Part 1 */
 node* makeNode(char* token);
-void freeNode(node* node_to_free, int free_sons);
+node* combineNodes(char* token, node* first_node, node* second_node);
+
 void addSonNodeToFatherNode(node** father, node* son);
-void printTree(node* tree, int tab);
-void addSonsToFatherNode(node* father, node* son);
-node* combineNodes(char* token, node* one, node* two);
-void addList(node* root, node* arr);
+void addSonsNodesToFatherNode(node* father, node* son);
+void addNodesList(node* add_to, node* to_add);
+void printTree(node* curr_node, int num_of_spaces);
+void freeNode(node* node_to_free, int free_sons);
 
 /* Semantic Check - Part 2 */
 void semanticAnalysis(node* root);
