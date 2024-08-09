@@ -13,122 +13,131 @@ char* func_has_been_called[256];
 int func_called_index = 0;
 int func_has_been_called_index = 0;
 
-/* Functions definitions */
-/* AST - Part 1 */
-
-/**
- * makeNode - Creates a new node with the specified token.
- * @param token: The token to assign to the new node.
- * @return A pointer to the newly created node.
- */
 node* makeNode(char* token) {
 	node *newnode = (node*)malloc(sizeof(node));
-	char *newstr = (char*)malloc(sizeof(token) + 1);
-	strcpy(newstr, token);
-	newnode->token = newstr;
-	newnode->nodes = NULL;
-	newnode->node_type = NULL;
+	char *new_token = (char*)malloc(sizeof(token) + 1);
+	strcpy(new_token, token);
+	newnode->token = new_token;
 	newnode->father = NULL;
+	newnode->nodes = NULL;
 	newnode->count = 0;
+	newnode->node_type = NULL;
 	newnode->line = 0;
 	return newnode;
 }
 
-/**
- * addSonNodeToFatherNode - Adds a son node to the father node.
- * @param father: The father node to which the son will be added.
- * @param son: The son node to add to the father.
- */
-void addSonNodeToFatherNode(node** father, node* son) {
-	if ((*father)->count == 0) {
-		(*father)->nodes = (node**)malloc(sizeof(node*));
-		(*father)->nodes[(*father)->count] = son;
-		(*father)->count++;
+void freeNode(node* node_to_free, int free_sons){
+	if (!node_to_free)
+		return;
+
+	int i;
+	for(i = 0; i < node_to_free->count && free_sons == 1; i++){
+		free(node_to_free->nodes[i]);
 	}
-	else {
+
+	free(node_to_free);
+}
+
+
+void addSonNodeToFatherNode(node** father, node* son) {
+	// maloc
+	// set son
+	// add to number of sons
+
+	if (!father || !(*father) || !son){
+		return;
+	}
+	if ((*father)->count != 0) {
 		(*father)->nodes = (node**)realloc((*father)->nodes, ((*father)->count+1)*sizeof(node*));
 		(*father)->nodes[(*father)->count] = son;
 		(*father)->count++;
 	}
+	else {
+		(*father)->nodes = (node**)malloc(sizeof(node*));
+		(*father)->nodes[(*father)->count] = son;
+		(*father)->count++;
+	}
 }
 
-/**
- * printTree - Recursively prints the tree structure.
- * @param tree: The root node of the tree to print.
- * @param tab: The current indentation level for printing.
- */
-void printTree(node* tree, int tab) {
-	int i;
-	char* token = tree->token;
-
-	if (*token) {
-		for (i = 0; i < tab; i++) {
-			printf("\t");
-		}
-		printf("(%s\n", token);
+void addSonsToFatherNode(node* father, node* sons){
+	addSonNodeToFatherNode(&father, sons);
+	for (int i = 0; i < sons->count; i++){
+		addSonNodeToFatherNode(&father, sons->nodes[i]);
 	}
-	else
-		tab -= 1;
+	
+}
+
+void printTree(node* tree, int num_of_spaces) {
+	int i;
+	int j;
+	int spaces_multiplier = 3; // to emphesize spaces between each line/scope
+	char* curr_token = tree->token;
+	
+	if (!*curr_token) {
+		num_of_spaces -= 1;
+	}
+	else{
+		for (i = 0; i < num_of_spaces; i++) {
+			for(j = 0; j < spaces_multiplier; j++){
+				printf(" ");
+			}
+		}
+		printf("(%s\n", curr_token);
+	}
+
 	if (tree->nodes) {
 		for (int j = 0; j < tree->count; j++) {
-			printTree(tree->nodes[j], tab + 1);
+			printTree(tree->nodes[j], num_of_spaces + 1);
 		}
 	}
-	for (i = 0; i < tab; i++) {
-		printf("\t");
+
+	for (i = 0; i < num_of_spaces; i++) {
+		for(j = 0; j < spaces_multiplier; j++){
+				printf(" ");
+			}
 	}
-	if (*token)
+	if (*curr_token)
 		printf(")\n");
 }
 
-/**
- * addSonsToFatherNode - Creates a list of nodes from a son node and adds them to the father node.
- * @param father: The father node to which the list will be added.
- * @param son: The son node from which the list is derived.
- */
-void addSonsToFatherNode(node* father, node* son) {
-	node* temp = son;
-	addSonNodeToFatherNode(&father, makeNode(son->token));
-	while (temp->nodes) {
-		temp = temp->nodes[0];
-		addSonNodeToFatherNode(&father, makeNode(temp->token));
+node* combineNodes(char* token, node* first_node, node* second_node) {
+	if(!first_node){
+		return second_node;
 	}
-}
+	if(!second_node){
+		return first_node;
+	}
+	node* combined_node = (node*)malloc(sizeof(node));
+	int i = 0;
+	int j = 0;
+	int new_count = first_node->count + second_node->count; // TODO chage to num_of_sons
+	if (first_node->count == 0) // leaf
+		new_count += 1;
+	if (second_node->count == 0) // leaf
+		new_count += 1;
 
-/**
- * combineNodes - Combines two nodes into a new node with the specified token.
- * @param token: The token for the new combined node.
- * @param one: The first node to combine.
- * @param two: The second node to combine.
- * @return A pointer to the newly created node.
- */
-node* combineNodes(char* token, node* one, node* two) {
-	int i = 0, j = 0;
-	node* new = (node*)malloc(sizeof(node));
-	new->token = strdup(token);
-	new->count = one->count + two->count;
-	if (one->count == 0)
-		new->count++;
-	if (two->count == 0)
-		new->count++;
-	new->nodes = (node**)malloc(sizeof(node*) * new->count);
-	if (one->count == 0)
-		new->nodes[j++] = one;
+	combined_node->token = strdup(token);
+	combined_node->count = new_count;
+	combined_node->nodes = (node**)malloc(sizeof(node*) * combined_node->count);
+	if (first_node->count == 0)
+		combined_node->nodes[j++] = first_node;
 	else {
-		for (j, i = 0; i < one->count; j++, i++) {
-			new->nodes[j] = one->nodes[i];
+		for (i = 0; i < first_node->count; i++) {
+			combined_node->nodes[j] = first_node->nodes[i];
+			j++;
 		}
-		free(one);
+		freeNode(first_node, 0);
 	}
-	if (two->count == 0)
-		new->nodes[j++] = two;
+	if (second_node->count == 0)
+		combined_node->nodes[j++] = second_node;
 	else {
-		for (j, i = 0; i < two->count; j++, i++) {
-			new->nodes[j] = two->nodes[i];
+		for (i = 0; i < second_node->count; i++) {
+			combined_node->nodes[j] = second_node->nodes[i];
+			j++;
 		}
-		free(two);
+		freeNode(second_node, 0);
 	}
-	return new;
+	return combined_node;
 }
 
 /**
@@ -141,9 +150,21 @@ void addList(node* root, node* arr){
 		addSonNodeToFatherNode(&root, arr);
 	}
 	else{
-		for (int i =0; i< arr->count;i++){
-			addSonNodeToFatherNode(&root,arr->nodes[i]);
+		for (int i = 0; i < arr->count; i++){
+			addSonNodeToFatherNode(&root, arr->nodes[i]);
 		}
+	}
+}
+
+void makeNodesList(node* father, node* son) {
+	if(!son){
+		printf("\n\nERROR\n\nson is null");
+		return;
+	}
+	node* tmp = son;
+	while (tmp->nodes) {
+		addSonNodeToFatherNode(&father, makeNode(tmp->token));
+		tmp = tmp->nodes[0];
 	}
 }
 
@@ -162,7 +183,7 @@ void semanticAnalysis(node* root) {
 	else {
 		checkMainNonStaticCalls(root);
 		checkStaticNonStaticCalls();
-		printInfo(root);
+		printTree (root,0);
 	}
 }
 
@@ -1024,20 +1045,3 @@ void printScopes(scopeNode *node){
     printf("Total Scopes: %d\n",GlobalScope);
 }
 
-/**
- * printInfo - Prints the Abstract Syntax Tree (AST), symbol table, and scopes for analysis.
- * This function provides a complete overview of the program's structure by printing the AST, symbol table,
- * and scope information. It helps in debugging and understanding the program's flow and symbol usage.
- * @param root: The root node of the AST.
- */
-void printInfo(node *root){
-    printf ("Abstract Syntax Tree:\n"); 
-	printTree (root,0);
-	printf("-------------------------\n"); 
-    printf("Symbol Table Information:\n");
-    printSymbolTable(topStack);
-	printf("-------------------------\n"); 
-    printf("Scopes Information:\n");
-    printScopes(topStack);
-    printf("\n"); 
-}

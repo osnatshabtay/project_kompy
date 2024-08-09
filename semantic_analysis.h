@@ -4,11 +4,11 @@
 /* Define node structure for the abstract syntax tree (AST) - Part 1 */
 typedef struct node {
 	char* token;
-	int count;
-	struct node** nodes;
-	char* node_type;
-	int line;
 	char* father;
+	struct node** nodes; // TODO cahnge names (prob sons)
+	int count; // TODO change name (prob num_of_sons)
+	char* node_type;
+	int line; // TODO change to line_num
 } node;
 
 /* Define Symonl Table structures - Part 2 */
@@ -34,6 +34,7 @@ typedef struct scopeNode{
 /* Functions declarations */
 /* AST - Part 1 */
 node* makeNode(char* token);
+void freeNode(node* node_to_free, int free_sons);
 void addSonNodeToFatherNode(node** father, node* son);
 void printTree(node* tree, int tab);
 void addSonsToFatherNode(node* father, node* son);
@@ -67,6 +68,5 @@ void setFatherForStatements(node** statements, int size, char* fatherName);
 void setFatherForChildNodes(node* root, char* fatherName);
 void printScopes(struct scopeNode *node);
 void printSymbolTable(struct scopeNode *node);
-void printInfo(node *root);
 
 #endif 

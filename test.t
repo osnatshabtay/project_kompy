@@ -10,6 +10,7 @@ private int foo_3() {
     var int: x<-5;
     if (true) 
     { 
+        var int: pp<-foo(8,9);
         var int: w<-9;
         x<-7;
         foo(w,x); 

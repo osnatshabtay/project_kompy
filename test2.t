@@ -8,4 +8,11 @@ public void main(): static{
     if(z<y){
         z<-8;
     }
+    if (true) 
+    { 
+        var int: w<-9;
+        x<-7;
+        var int: pp<-foo(8,9);
+        
+    }  
 }
