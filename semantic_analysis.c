@@ -18,7 +18,7 @@ node* makeNode(char* token) {
 	newnode->token = new_token;
 	newnode->father = NULL;
 	newnode->sons_nodes = NULL;
-	newnode->count = 0;
+	newnode->sons_count = 0;
 	newnode->node_type = NULL;
 	newnode->line_number = 0;
 	return newnode;
@@ -34,28 +34,28 @@ node* combineNodes(char* token, node* first_node, node* second_node) {
 	node* combined_node = (node*)malloc(sizeof(node));
 	int i = 0;
 	int j = 0;
-	int new_count = first_node->count + second_node->count; // TODO chage to num_of_sons
-	if (first_node->count == 0) // leaf
+	int new_count = first_node->sons_count + second_node->sons_count;
+	if (first_node->sons_count == 0) // leaf
 		new_count += 1;
-	if (second_node->count == 0) // leaf
+	if (second_node->sons_count == 0) // leaf
 		new_count += 1;
 
 	combined_node->token = strdup(token);
-	combined_node->count = new_count;
-	combined_node->sons_nodes = (node**)malloc(sizeof(node*) * combined_node->count);
-	if (first_node->count == 0)
+	combined_node->sons_count = new_count;
+	combined_node->sons_nodes = (node**)malloc(sizeof(node*) * combined_node->sons_count);
+	if (first_node->sons_count == 0)
 		combined_node->sons_nodes[j++] = first_node;
 	else {
-		for (i = 0; i < first_node->count; i++) {
+		for (i = 0; i < first_node->sons_count; i++) {
 			combined_node->sons_nodes[j] = first_node->sons_nodes[i];
 			j++;
 		}
 		freeNode(first_node, 0);
 	}
-	if (second_node->count == 0)
+	if (second_node->sons_count == 0)
 		combined_node->sons_nodes[j++] = second_node;
 	else {
-		for (i = 0; i < second_node->count; i++) {
+		for (i = 0; i < second_node->sons_count; i++) {
 			combined_node->sons_nodes[j] = second_node->sons_nodes[i];
 			j++;
 		}
@@ -72,30 +72,30 @@ void addSonNodeToFatherNode(node** father, node* son) {
 	if (!father || !(*father) || !son){
 		return;
 	}
-	if ((*father)->count != 0) {
-		(*father)->sons_nodes = (node**)realloc((*father)->sons_nodes, ((*father)->count+1)*sizeof(node*));
-		(*father)->sons_nodes[(*father)->count] = son;
-		(*father)->count++;
+	if ((*father)->sons_count != 0) {
+		(*father)->sons_nodes = (node**)realloc((*father)->sons_nodes, ((*father)->sons_count+1)*sizeof(node*));
+		(*father)->sons_nodes[(*father)->sons_count] = son;
+		(*father)->sons_count++;
 	}
 	else {
 		(*father)->sons_nodes = (node**)malloc(sizeof(node*));
-		(*father)->sons_nodes[(*father)->count] = son;
-		(*father)->count++;
+		(*father)->sons_nodes[(*father)->sons_count] = son;
+		(*father)->sons_count++;
 	}
 }
 
 void addSonsNodesToFatherNode(node* father, node* sons){
 	addSonNodeToFatherNode(&father, sons);
-	for (int i = 0; i < sons->count; i++){
+	for (int i = 0; i < sons->sons_count; i++){
 		addSonNodeToFatherNode(&father, sons->sons_nodes[i]);
 	}
 	
 }
 
 void addNodesList(node* add_to, node* to_add){
-	if (to_add->count != 0){
+	if (to_add->sons_count != 0){
 		int i;
-		for (i = 0; i < to_add->count; i++){
+		for (i = 0; i < to_add->sons_count; i++){
 			addSonNodeToFatherNode(&add_to, to_add->sons_nodes[i]);
 		}
 	}
@@ -123,7 +123,7 @@ void printTree(node* curr_node, int num_of_spaces) {
 	}
 
 	if (curr_node->sons_nodes) {
-		for (int j = 0; j < curr_node->count; j++) {
+		for (int j = 0; j < curr_node->sons_count; j++) {
 			printTree(curr_node->sons_nodes[j], num_of_spaces + 1);
 		}
 	}
@@ -142,7 +142,7 @@ void freeNode(node* node_to_free, int free_sons){
 		return;
 
 	int i;
-	for(i = 0; i < node_to_free->count && free_sons == 1; i++){
+	for(i = 0; i < node_to_free->sons_count && free_sons == 1; i++){
 		free(node_to_free->sons_nodes[i]);
 	}
 
@@ -166,12 +166,12 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'F': // FUNCTION or FOR
 			if (!strcmp(root->token, "FUNCTION")) {
 				scope_level++;
-				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->sons_nodes[1], root->sons_nodes[3]->sons_nodes, scope_level, root->sons_nodes[3]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->sons_nodes[1], root->sons_nodes[3]->sons_nodes, scope_level, root->sons_nodes[3]->sons_count);
 				isValidReturnType(root);
 			}
 			else if (!strcmp(root->token, "FOR")) {
 				scope_level++;
-				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[3]->sons_nodes, scope_level, root->sons_nodes[3]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[3]->sons_nodes, scope_level, root->sons_nodes[3]->sons_count);
 				char* initType = checkExpAndReturnItsType(root->sons_nodes[0]);
 				if(strcmp("INT" ,initType)){
 					printf("Error: Line %d: FOR initialization requires an 'INT' type.\n", root->sons_nodes[0]->line_number);
@@ -193,7 +193,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'S': // STATIC-FN
 			if (!strcmp(root->token, "STATIC-FN")) {
 				scope_level++;
-				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->sons_nodes[1], root->sons_nodes[3]->sons_nodes, scope_level, root->sons_nodes[3]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->sons_nodes[1], root->sons_nodes[3]->sons_nodes, scope_level, root->sons_nodes[3]->sons_count);
 				isValidReturnType(root);
 			}
 			break;
@@ -201,7 +201,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'W': // WHILE
 			if (!strcmp(root->token, "WHILE")) {
 				scope_level++;
-				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[1]->sons_nodes, scope_level, root->sons_nodes[1]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[1]->sons_nodes, scope_level, root->sons_nodes[1]->sons_count);
 				char* exp_type = checkExpAndReturnItsType(root->sons_nodes[0]);
 				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid WHILE condition. Expected return type 'BOOL'.\n", root->line_number);
@@ -213,7 +213,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'D': // DO-WHILE
 			if (!strcmp(root->token, "DO-WHILE")) {
 				scope_level++;
-				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[0]->sons_nodes, scope_level, root->sons_nodes[0]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[0]->sons_nodes, scope_level, root->sons_nodes[0]->sons_count);
 				char* exp_type = checkExpAndReturnItsType(root->sons_nodes[1]);
 				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid DO-WHILE condition. Expected return type 'BOOL'.\n", root->line_number);
@@ -225,7 +225,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'C': // CODE
 			if (!strcmp(root->token, "CODE")) {
 				scope_level++;
-        		pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes, scope_level, root->count);
+        		pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes, scope_level, root->sons_count);
 			}
 			break;
 
@@ -233,14 +233,14 @@ void pushStatementToStack(node* root, int scope_level){
 			if (!strcmp(root->token, "MAIN")) {
 				scope_level++;
 				mainCounter++;
-				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[0]->sons_nodes, scope_level, root->sons_nodes[0]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[0]->sons_nodes, scope_level, root->sons_nodes[0]->sons_count);
 			}
 			break;
 
 		case 'I': // IF
 			if (!strcmp(root->token, "IF")) {
 				scope_level++;
-				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[1]->sons_nodes, scope_level, root->sons_nodes[1]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[1]->sons_nodes, scope_level, root->sons_nodes[1]->sons_count);
 				char* exp_type = checkExpAndReturnItsType(root->sons_nodes[0]);
 				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid IF condition. Expected return type 'BOOL'.\n",root->line_number);
@@ -252,7 +252,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'B': // BLOCK
 			if (!strcmp(root->token, "BLOCK")) {
 				scope_level++;
-				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes, scope_level, root->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes, scope_level, root->sons_count);
 			}
 			break;
 
@@ -260,7 +260,7 @@ void pushStatementToStack(node* root, int scope_level){
 			break;
 	}
 
-	for (int i = 0; i < root->count; i++){
+	for (int i = 0; i < root->sons_count; i++){
 		pushStatementToStack(root->sons_nodes[i], scope_level);
 	}
 }
@@ -300,7 +300,7 @@ void pushStatementsToScope(node** statements, int num_of_statements){
                 char *right = checkExpAndReturnItsType(statements[i]->sons_nodes[1]);
 				if (!strcmp(left, "STRING"))
 					checkStringAssignment(statements[i], right);
-				else if (statements[i]->sons_nodes[0]->count > 0){
+				else if (statements[i]->sons_nodes[0]->sons_count > 0){
 					printf("Error: Line %d: %s cannot have index.\n", statements[i]->sons_nodes[0]->line_number, left);
 					exit(1);
 				}
@@ -329,9 +329,9 @@ void pushStatementsToScope(node** statements, int num_of_statements){
 void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 	int i;
 	int j;
-	for(i = 0; i<var_declaration_nosde->count; i++){
+	for(i = 0; i<var_declaration_nosde->sons_count; i++){
 
-		int num_of_vars = var_declaration_nosde->sons_nodes[i]->count;
+		int num_of_vars = var_declaration_nosde->sons_nodes[i]->sons_count;
 		char* var_type = var_declaration_nosde->sons_nodes[i]->token;
 		node** vars_declared = var_declaration_nosde->sons_nodes[i]->sons_nodes;
 
@@ -464,7 +464,7 @@ char* checkExpAndReturnItsType(node* exp){
 	else if (exp->node_type != NULL && !strcmp(exp->node_type, "ID")){
 		symbolNode* symbol_node = scopeSearch(exp->token);
 		if(symbol_node != NULL){
-			if(!strcmp(symbol_node->type, "STRING") && exp->count > 0){
+			if(!strcmp(symbol_node->type, "STRING") && exp->sons_count > 0){
 				char* indexType = checkExpAndReturnItsType(exp->sons_nodes[0]->sons_nodes[0]);
 				if(strcmp("INT", indexType)){
 					printf("Error: Line %d: Size of string must be type 'INT' not '%s'.\n", exp->line_number ,indexType);
@@ -684,14 +684,14 @@ int isValidReturnType(node* func_node){
 }
 
 int isValidReturnStatement(node* func_node, char* expected_ret_type){
-	for (int i = 0; i < func_node->count; i++){
+	for (int i = 0; i < func_node->sons_count; i++){
 		if(!strcmp(func_node->sons_nodes[i]->token, "RET")){
-			if (func_node->sons_nodes[i]->count > 0){
+			if (func_node->sons_nodes[i]->sons_count > 0){
 				char* actual_ret_type = checkExpAndReturnItsType(func_node->sons_nodes[i]->sons_nodes[0]);
 				if (strcmp(actual_ret_type, expected_ret_type))
 					return 0;
 			}
-			else if(func_node->sons_nodes[i]->count == 0 && strcmp(expected_ret_type, "VOID")){
+			else if(func_node->sons_nodes[i]->sons_count == 0 && strcmp(expected_ret_type, "VOID")){
 				return 0;
 			}
 		}
@@ -784,7 +784,7 @@ void checkMainNonStaticCalls(node* tree) {
         }
     }
 
-    for (int j = 0; j < tree->count; j++) {
+    for (int j = 0; j < tree->sons_count; j++) {
         checkMainNonStaticCalls(tree->sons_nodes[j]);
     }
 
@@ -801,15 +801,15 @@ int checkFunctionArgs(node* func_params, node* func_args){
 
 	// num of args == num of params
 	int expected_param_count = 0;
-	for (int i = 0; i < func_params->count; i++)
-		expected_param_count += func_params->sons_nodes[i]->count;
-	if(expected_param_count != func_args->count)
+	for (int i = 0; i < func_params->sons_count; i++)
+		expected_param_count += func_params->sons_nodes[i]->sons_count;
+	if(expected_param_count != func_args->sons_count)
 		return 0;
 
 	// type matching
-    for (int i = 0, k = 0; i < func_params->count; i++) {
+    for (int i = 0, k = 0; i < func_params->sons_count; i++) {
         char* expected_type = func_params->sons_nodes[i]->token;
-        for (int j = 0; j < func_params->sons_nodes[i]->count; j++, k++) {
+        for (int j = 0; j < func_params->sons_nodes[i]->sons_count; j++, k++) {
             if (strcmp(expected_type, checkExpAndReturnItsType(func_args->sons_nodes[k]))) {
                 return 0;
             }
@@ -819,17 +819,17 @@ int checkFunctionArgs(node* func_params, node* func_args){
 }
 
 void checkStringAssignment(node* str_node, char* assigned_val_type){
-	if (str_node->sons_nodes[0]->count == 0){
+	if (str_node->sons_nodes[0]->sons_count == 0){
 		if(strcmp("STRING", assigned_val_type)){
 			printf("Error: Line %d: Assignment type mismatch: cannot assign '%s' to STRING\n", str_node->sons_nodes[0]->line_number ,assigned_val_type);
 			exit(1);
 		}
 	}
-	if(strcmp(assigned_val_type,"CHAR") && str_node->sons_nodes[0]->count != 0 && !strcmp(str_node->sons_nodes[0]->sons_nodes[0]->token, "INDEX")){
+	if(strcmp(assigned_val_type,"CHAR") && str_node->sons_nodes[0]->sons_count != 0 && !strcmp(str_node->sons_nodes[0]->sons_nodes[0]->token, "INDEX")){
 		printf("Error: Line %d: Assignment type mismatch - expected 'CHAR' for string array cell, but found '%s'.\n", str_node->sons_nodes[0]->line_number ,assigned_val_type);
 		exit(1);
 	}
-	if (str_node->sons_nodes[0]->count != 0 && !strcmp(str_node->sons_nodes[0]->sons_nodes[0]->token, "INDEX")){
+	if (str_node->sons_nodes[0]->sons_count != 0 && !strcmp(str_node->sons_nodes[0]->sons_nodes[0]->token, "INDEX")){
 		char* indexType = checkExpAndReturnItsType(str_node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]);
 		if(strcmp("INT", indexType)){
 			printf("Error: Line %d: Size of string must be type 'INT' not '%s'\n", str_node->sons_nodes[0]->line_number ,indexType);
@@ -856,7 +856,7 @@ void findCalledFunctions(node* tree) {
 		}
     }
 
-    for (int j = 0; j < tree->count; j++) {
+    for (int j = 0; j < tree->sons_count; j++) {
         findCalledFunctions(tree->sons_nodes[j]);
     }
 }
