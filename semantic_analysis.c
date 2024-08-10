@@ -5,11 +5,11 @@
 /* Global variables */
 scopeNode* SCOPE_STACK_TOP = NULL;
 int mainCounter = 0;
-char* currentFunction = NULL;
-char* func_called[256];
-char* func_has_been_called[256];
-int func_called_index = 0;
-int func_has_been_called_index = 0;
+char* CURR_FUNCTION = NULL;
+char* CALLED_FUNCTIONS[256];
+char* HAS_CALLED_FUNCTIONS[256];
+int CALLED_FUNCTIONS_INDEX = 0;
+int HAS_CALLED_FUNCTIONS_INDEX = 0;
 
 node* makeNode(char* token) {
 	node *newnode = (node*)malloc(sizeof(node));
@@ -149,19 +149,12 @@ void freeNode(node* node_to_free, int free_sons){
 	free(node_to_free);
 }
 
-
-/* Semantic Check - Part 2 */
-
-/**
- * semanticAnalysis - Conducts semantic analysis on the given root node.
- * @param root: The root node of the abstract syntax tree.
- */
 void semanticAnalysis(node* root) {
 	pushStatementToStack(root, 0);
 	checkForSymbolsDuplications(SCOPE_STACK_TOP);
-	findFunctionsCalled(root);
+	findCalledFunctions(root);
 	checkMainNonStaticCalls(root);
-	checkStaticNonStaticCalls();
+	checkStaticNonStaticCallsViolation();
 	printTree (root,0);
 }
 
@@ -174,7 +167,7 @@ void pushStatementToStack(node* root, int scope_level){
 			if (!strcmp(root->token, "FUNCTION")) {
 				scope_level++;
 				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
-				checkFuncReturn(root);
+				isValidReturnType(root);
 			}
 			else if (!strcmp(root->token, "FOR")) {
 				scope_level++;
@@ -201,7 +194,7 @@ void pushStatementToStack(node* root, int scope_level){
 			if (!strcmp(root->token, "STATIC-FN")) {
 				scope_level++;
 				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
-				checkFuncReturn(root);
+				isValidReturnType(root);
 			}
 			break;
 
@@ -675,51 +668,35 @@ char* getPointerBaseType(char* type) {
     return "NULL";
 }
 
-/**
- * checkFuncReturn - Checks the return type of a function.
- * This function validates the return type of a function by comparing the function's declared return type
- * with the actual return value types present in the function body. It handles special cases for "VOID"
- * functions and reports errors if there are type mismatches or if a void function returns a value.
- * @param funcNode: The AST node representing the function.
- * @return: 1 if the return type is valid, 0 otherwise.
- */
-int checkFuncReturn(node *funcNode){
-    char *funcType = funcNode->nodes[2]->token;
-    int ans = evalReturn(funcNode->nodes[3], funcType);	
-    if (!strcmp(funcType,"VOID") && ans == 0){
-        printf ("Error: Line %d: Void function '%s' cannot return value.\n", funcNode->line, funcNode->nodes[0]->token);
-        exit(1);
-    }
-    else if (ans == 0){
-        printf ("Error: Line %d: Function '%s' returns an invalid value.\n", funcNode->line ,funcNode->nodes[0]->token);
-        exit(1);
-    }
+int isValidReturnType(node* func_node){
+    char* func_type = func_node->nodes[2]->token;
+    int is_valit_ret_statement = isValidReturnStatement(func_node->nodes[3], func_type);
+	if (is_valit_ret_statement == 0){
+		if (!strcmp(func_type,"VOID")){
+        	printf ("Error: Line %d: Void function '%s' cannot return value.\n", func_node->line, func_node->nodes[0]->token);
+		}
+		else{
+        	printf ("Error: Line %d: Function '%s' returns an invalid value.\n", func_node->line ,func_node->nodes[0]->token);
+		}
+		exit(1);
+	}	
     return 1;
 }
 
-/**
- * evalReturn - Evaluates return statements in a function for type correctness.
- * This function traverses the function body to find return statements and checks if the returned values
- * match the declared return type of the function. It ensures that non-void functions return appropriate values
- * and that the return type is consistent with the function's declaration.
- * @param funcNode: The AST node representing the function body.
- * @param type: The declared return type of the function.
- * @return: 1 if all return statements are valid, 0 otherwise.
- */
-int evalReturn(node* funcNode, char* type){
-	for (int i=0;i<funcNode->count;i++){
-		if(!strcmp(funcNode->nodes[i]->token, "RET")){
-			if(funcNode->nodes[i]->count == 0 && strcmp(type, "VOID")){
-				return 0;
-			}
-			else if (funcNode->nodes[i]->count > 0){
-				char* val = checkExpAndReturnItsType(funcNode->nodes[i]->nodes[0]);
-				if (strcmp(val, type))
+int isValidReturnStatement(node* func_node, char* expected_ret_type){
+	for (int i = 0; i < func_node->count; i++){
+		if(!strcmp(func_node->nodes[i]->token, "RET")){
+			if (func_node->nodes[i]->count > 0){
+				char* actual_ret_type = checkExpAndReturnItsType(func_node->nodes[i]->nodes[0]);
+				if (strcmp(actual_ret_type, expected_ret_type))
 					return 0;
 			}
+			else if(func_node->nodes[i]->count == 0 && strcmp(expected_ret_type, "VOID")){
+				return 0;
+			}
 		}
-		if(strcmp(funcNode->nodes[i]->token, "FUNCTION"))
-			if(evalReturn(funcNode->nodes[i], type)==0)
+		if(strcmp(func_node->nodes[i]->token, "FUNCTION"))
+			if(isValidReturnStatement(func_node->nodes[i], expected_ret_type) == 0)
 				return 0;
 	}
 	return 1;
@@ -765,23 +742,17 @@ int checkFunctionCall(char* func_name, node* func_args){
 	exit(1);
 }
 
-/**
- * checkStaticNonStaticCalls - Checks for illegal calls from static functions to non-static functions.
- * This function ensures that static functions do not call non-static functions. It iterates through all recorded
- * function calls and checks if any static functions have called non-static functions, reporting errors if such
- * calls are found.
- */
-void checkStaticNonStaticCalls() {
+void checkStaticNonStaticCallsViolation() {
     int i = 0, j = 0;
-    for (j = 0; j < func_has_been_called_index; j++) {
-        symbolNode* calledFuncSymbol = scopeSearch(func_has_been_called[j]);
-        if (calledFuncSymbol != NULL) {
-            for (i = 0; i < func_called_index; i++) {
-                symbolNode* callingFuncSymbol = scopeSearch(func_called[i]);
+    for (j = 0; j < HAS_CALLED_FUNCTIONS_INDEX; j++) {
+        symbolNode* called_func_symbol = scopeSearch(HAS_CALLED_FUNCTIONS[j]);
+        if (called_func_symbol != NULL) {
+            for (i = 0; i < CALLED_FUNCTIONS_INDEX; i++) {
+                symbolNode* symbol_of_calling_func = scopeSearch(CALLED_FUNCTIONS[i]);
 
-                if (callingFuncSymbol != NULL) {
-                    if (callingFuncSymbol->is_static && !calledFuncSymbol->is_static) {
-                        printf("Error: Static function '%s' cannot call non-static function '%s'.\n", callingFuncSymbol->id, func_has_been_called[j]);
+                if (symbol_of_calling_func != NULL) {
+                    if (symbol_of_calling_func->is_static && !called_func_symbol->is_static) {
+                        printf("Error: Static function '%s' cannot call non-static function '%s'.\n", symbol_of_calling_func->id, HAS_CALLED_FUNCTIONS[j]);
                         exit(1);
                     }
 				}
@@ -790,28 +761,24 @@ void checkStaticNonStaticCalls() {
     }
 }
 
-/**
- * checkMainNonStaticCalls - Ensures the 'main' function does not call non-static functions.
- * This function traverses the AST to find the main function and checks that it does not call non-static functions.
- * Reports an error if the main function makes such calls.
- * @param tree: The AST node to check.
- */
 void checkMainNonStaticCalls(node* tree) {
-    if (tree == NULL) return;
+    if (tree == NULL){
+		return;
+	}
 
     char* token = tree->token;
-
     static int inMain = 0;
 
+    // detect entering the 'main' function
     if (strcmp(token, "MAIN") == 0) {
         inMain = 1;
     }
 
     if (strcmp(token, "FUNC_CALL") == 0) {
         if (inMain) {
-            symbolNode* calledFuncSymbol = scopeSearch(tree->nodes[0]->token);
-            if (calledFuncSymbol != NULL && !calledFuncSymbol->is_static) {
-                printf("Error: 'main' function cannot call non-static function '%s'.\n", calledFuncSymbol->id);
+            symbolNode* called_func_symbol = scopeSearch(tree->nodes[0]->token);
+            if (called_func_symbol != NULL && !called_func_symbol->is_static) {
+                printf("Error: 'main' function cannot call non-static function '%s'.\n", called_func_symbol->id);
                 exit(1);
             }
         }
@@ -821,6 +788,7 @@ void checkMainNonStaticCalls(node* tree) {
         checkMainNonStaticCalls(tree->nodes[j]);
     }
 
+    // detect exiting the 'main' function
     if (strcmp(token, "MAIN") == 0) {
         inMain = 0;
     }
@@ -871,55 +839,24 @@ void checkStringAssignment(node* str_node, char* assigned_val_type){
 	
 }
 
-/**
- * findFunctionsCalled - Records functions called within the AST.
- * This function traverses the AST to find function call nodes and records the functions that are called.
- * It tracks the current function being parsed to associate calls with their caller functions, aiding in analysis
- * of function interactions.
- * @param tree: The AST node to check for function calls.
- */
-void findFunctionsCalled(node* tree) {
+void findCalledFunctions(node* tree) {
     if (tree == NULL) return;
 
     char* token = tree->token;
 
-    if (strcmp(token, "FUNCTION") == 0 || strcmp(token, "STATIC-FN") == 0) {
-        if (tree->nodes[0] && tree->nodes[0]->token) {
-            currentFunction = tree->nodes[0]->token;
-		}
-    }
-
-    if (strcmp(token, "FUNC_CALL") == 0) {
-        if (currentFunction) {
-			func_has_been_called[func_has_been_called_index++] = tree->nodes[0]->token;
-            func_called[func_called_index++] = currentFunction; 
+	if (!strcmp(token, "FUNC_CALL")) {
+        if (CURR_FUNCTION) {
+			HAS_CALLED_FUNCTIONS[HAS_CALLED_FUNCTIONS_INDEX++] = tree->nodes[0]->token;
+            CALLED_FUNCTIONS[CALLED_FUNCTIONS_INDEX++] = CURR_FUNCTION; 
         }
+    }
+    else if (!strcmp(token, "FUNCTION") || !strcmp(token, "STATIC-FN")) {
+        if (tree->nodes[0] && tree->nodes[0]->token) {
+            CURR_FUNCTION = tree->nodes[0]->token;
+		}
     }
 
     for (int j = 0; j < tree->count; j++) {
-        findFunctionsCalled(tree->nodes[j]);
+        findCalledFunctions(tree->nodes[j]);
     }
 }
-
-/**
- * printSymbolTable - Prints the symbol table for debugging and analysis.
- * This function traverses the symbol table from the scope_stack_top scope and prints information about each symbol,
- * including its identifier, type, value, and the scope in which it is declared. It helps visualize the structure
- * and contents of the symbol table.
- * @param node: The scope_stack_top scope node in the symbol table hierarchy.
- */
-void printSymbolTable(scopeNode *node)
-{  
-   scopeNode *curr_scope = node;
-   symbolNode *currentSymbol;
-   while(curr_scope != NULL){
-		currentSymbol = curr_scope->symbolTable;
-		while (currentSymbol != NULL) {
-			printf("ID: %s\t|\tVariable Type: %s\t|\tValue: %s\t|\tLocated In Scope: %d", currentSymbol->id, currentSymbol->type, currentSymbol->data,currentSymbol->scopeID);
-			printf("\n");
-			currentSymbol = currentSymbol->next;
-		}
-	curr_scope=curr_scope->next;       
-	}
-}
-

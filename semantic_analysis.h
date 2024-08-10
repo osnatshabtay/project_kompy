@@ -56,21 +56,21 @@ int isVarDeclared(char* var_name);
 symbolNode* symbolSearch (symbolNode* symbol_table, char* id);
 symbolNode* scopeSearch(char* id);
 char* checkExpAndReturnItsType(node* exp);
-int checkFuncReturn(node *funcNode);
-int evalReturn(node* funcNode, char* type);
+int isValidReturnType(node *func_node);
+int isValidReturnStatement(node* func_node, char* expected_ret_type);
 void isValidPrtAssinment(node* ptr_node);
 void checkForSymbolsDuplications(scopeNode* scope);
-int checkFunctionCall(char *func_name, node *func_args);
+int checkFunctionCall(char* func_name, node* func_args);
 char* getArithmeticResultType(char* left, char* right, node* exp);
 int isArithmeticType(char* type);
 int isCompatibleForComparison(char* left, char* right);
 int isEqualType(char* left, char* right);
 char* getPointerBaseType(char* type);
-void checkStaticNonStaticCalls();
+void checkStaticNonStaticCallsViolation();
 void checkMainNonStaticCalls(node* tree);
 int checkFunctionArgs(node* func_params, node* func_args);
 void checkStringAssignment(node* str_node, char* assigned_val_type);
-void findFunctionsCalled(node* astNode);
-void printSymbolTable(struct scopeNode *node);
+void findCalledFunctions(node* astNode);
+
 
 #endif 

@@ -2,6 +2,14 @@ public int foo(args>> int: y, z; char: ch): static {
      string a[30] <- "moshe";
      return |a|; 
     }
+
+public int foo_5(): static { 
+    var int: a;
+    var int: x; 
+    a <- 2;
+    return 2; 
+    }
+
 public int foo_2(){ 
     var int: a;
     var int: x; 
@@ -36,4 +44,5 @@ public void main(): static{
     d<-1.1+2;
     b<-d<3.3;
     b<-y==z;
+    foo_5();
 }
