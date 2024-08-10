@@ -272,33 +272,19 @@ void pushStatementToStack(node* root, int scope_level){
 	}
 }
 
-/**
- * pushScopeToScopeStack - Pushes a new scope onto the scope stack.
- * @param scope_stack_top: The scope_stack_top of the scope stack.
- * @param name: The name of the new scope.
- * @param params: The parameters of the scope, if any.
- * @param statements: The statements in the scope.
- * @param scope_level: The scope scope_level.
- * @param stat_size: The number of statements in the scope.
- */
-void pushScopeToScopeStack(scopeNode** scope_stack_top, node* params, node** statements, int scope_level, int stat_size){      
+void pushScopeToScopeStack(scopeNode** scope_stack_top, node* scope_params, node** statements, int scope_level, int num_of_statements){      
 	scopeNode* new_scope = (scopeNode*) malloc(sizeof(scopeNode));
 	new_scope->scopeLevel = scope_level-1;
 	new_scope->next = (*scope_stack_top);
 	(*scope_stack_top) = new_scope;
-	if (params){
-		pushSymbolsToSymbolTable(params); 
+	if (scope_params){
+		pushSymbolsToSymbolTable(scope_params); 
 	}
-	pushScopeStatements(statements, stat_size); // TODO continue (changed pushSymbolsToSymbolTable and addSymbolToSymbolTable)
+	pushStatementsToScope(statements, num_of_statements);
 }
 
-/**
- * pushScopeStatements - Pushes statements of a scope onto the scope stack.
- * @param statements: The statements to push.
- * @param size: The number of statements.
- */
-void pushScopeStatements(node** statements, int size){
-	for (int i = 0;i < size;i++){
+void pushStatementsToScope(node** statements, int num_of_statements){
+	for (int i = 0;i < num_of_statements;i++){
 		if(!strcmp(statements[i]->token, "VAR")){
 			pushSymbolsToSymbolTable(statements[i]);
 		}
@@ -316,7 +302,7 @@ void pushScopeStatements(node** statements, int size){
 		}
 
 		else if(!strcmp(statements[i]->token, "<-")){
-        	if (isVarDeclared(statements[i]->nodes[0]->token) && strcmp(statements[i]->nodes[0]->token,"PTR")){
+        	if (isVarDeclared(statements[i]->nodes[0]->token) && strcmp(statements[i]->nodes[0]->token, "PTR")){
                 char *left = scopeSearch(statements[i]->nodes[0]->token)->type;
                 char *right = checkExpAndReturnItsType(statements[i]->nodes[1]);
 				if (!strcmp(left, "STRING"))
@@ -335,8 +321,8 @@ void pushScopeStatements(node** statements, int size){
 				}
 			}
 			
-			else if (!strcmp(statements[i]->nodes[0]->token,"PTR") && isVarDeclared(statements[i]->nodes[0]->nodes[0]->nodes[0]->token))
-				evalPtr(statements[i]);
+			else if (!strcmp(statements[i]->nodes[0]->token, "PTR") && isVarDeclared(statements[i]->nodes[0]->nodes[0]->nodes[0]->token))
+				isValidPrtAssinment(statements[i]);
 			
 			else{
 				checkExpAndReturnItsType(statements[i]->nodes[1]);
@@ -739,17 +725,11 @@ int evalReturn(node* funcNode, char* type){
 	return 1;
 }
 
-/**
- * evalPtr - Evaluates pointer assignment for type consistency.
- * This function checks if the left-hand side and right-hand side types in a pointer assignment are compatible.
- * It reports an error if there is a type mismatch, ensuring that pointers are assigned correctly.
- * @param ptrNode: The AST node representing the pointer assignment.
- */
-void evalPtr(node* ptrNode){
-	char *left = checkExpAndReturnItsType(ptrNode->nodes[0]);
-	char *right = checkExpAndReturnItsType(ptrNode->nodes[1]);
+void isValidPrtAssinment(node* ptr_node){
+	char *left = checkExpAndReturnItsType(ptr_node->nodes[0]);
+	char *right = checkExpAndReturnItsType(ptr_node->nodes[1]);
 	if (strcmp(right,left)){
-		printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", ptrNode->line, right, left);
+		printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", ptr_node->line, right, left);
 		exit(1);
 	}
 }
