@@ -316,7 +316,7 @@ void pushScopeStatements(node** statements, int size){
 		}
 
 		else if(!strcmp(statements[i]->token, "<-")){
-        	if (isDeclared(statements[i]->nodes[0]->token) && strcmp(statements[i]->nodes[0]->token,"PTR")){
+        	if (isVarDeclared(statements[i]->nodes[0]->token) && strcmp(statements[i]->nodes[0]->token,"PTR")){
                 char *left = scopeSearch(statements[i]->nodes[0]->token)->type;
                 char *right = evaluateExpression(statements[i]->nodes[1]);
 				if (!strcmp(left, "STRING"))
@@ -334,7 +334,7 @@ void pushScopeStatements(node** statements, int size){
 					exit(1);
 				}
 			}
-			else if (!strcmp(statements[i]->nodes[0]->token,"PTR") && isDeclared(statements[i]->nodes[0]->nodes[0]->nodes[0]->token))
+			else if (!strcmp(statements[i]->nodes[0]->token,"PTR") && isVarDeclared(statements[i]->nodes[0]->nodes[0]->nodes[0]->token))
 				evalPtr(statements[i]);
 			else{
 				evaluateExpression(statements[i]->nodes[1]);
@@ -436,16 +436,10 @@ void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* 
 		new_node->params = NULL;	
 }
 
-/**
- * isDeclared - Checks if a symbol with the given ID is declared in the current scope or any parent scopes.
- * @param id: The identifier of the symbol to check.
- * @return: Returns 1 if the symbol is declared, 0 otherwise.
- */
-int isDeclared(char* id){
-	symbolNode *symbol = scopeSearch(id);
-	if (symbol != NULL)
-		return 1;
-	return 0;
+
+int isVarDeclared(char* var_name){
+	symbolNode* symbol = scopeSearch(var_name);
+	return (symbol == NULL) ? 0 : 1;
 }
 
 symbolNode* symbolSearch (symbolNode* symbol_table, char* id){
@@ -664,7 +658,7 @@ char* evaluateExpression(node* exp){
 	}
 
 	else if(!strcmp(exp->token, "<-")){
-        	if (isDeclared(exp->nodes[0]->token)){
+        	if (isVarDeclared(exp->nodes[0]->token)){
                 char *left = scopeSearch(exp->nodes[0]->token)->type;
                 char *right = evaluateExpression(exp->nodes[1]);
             	if (strcmp(right,left) && strcmp(right,"NULL")){
@@ -675,6 +669,7 @@ char* evaluateExpression(node* exp){
 					return left;
 			}
 		}
+	
 	return "NULL";
 }
 
