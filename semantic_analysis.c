@@ -520,31 +520,16 @@ char* evaluateExpression(node* exp){
 	}
 
 	else if (!strcmp(exp->token,"+")||!strcmp(exp->token,"-")||!strcmp(exp->token,"*")||!strcmp(exp->token,"/")){
-		char* left, *right;
-        left = evaluateExpression(exp->nodes[0]);
-        right = evaluateExpression(exp->nodes[1]);
-		if (!strcmp(left, "NULL") || !strcmp(right,"NULL"))
+		char* left_exp, *right_exp;
+        left_exp = evaluateExpression(exp->nodes[0]);
+        right_exp = evaluateExpression(exp->nodes[1]);
+		if (!strcmp(left_exp, "NULL") || !strcmp(right_exp, "NULL"))
 			return "NULL";
-        if (!strcmp(left,"INT") && !strcmp(right,"INT"))
-			return "INT";
-		else if (!strcmp(left,"DOUBLE") && !strcmp(right,"DOUBLE"))
-			return "DOUBLE";
-		else if (!strcmp(left,"FLOAT") && !strcmp(right,"FLOAT"))
-			return "FLOAT";
-		else if ((!strcmp(left,"DOUBLE") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"DOUBLE")))
-			return "DOUBLE";
-		else if ((!strcmp(left,"FLOAT") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"FLOAT")))
-			return "FLOAT";
-		else if (((!strcmp(left,"INT*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"INT*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
-			return "INT*";
-		else if (((!strcmp(left,"CHAR*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"CHAR*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
-			return "CHAR*";
-		else if (((!strcmp(left,"DOUBLE*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"DOUBLE*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
-			return "DOUBLE*";
-		else if (((!strcmp(left,"FLOAT*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"FLOAT*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
-			return "FLOAT*";
-		else {
-			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line, exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+        if (isArithmeticType(left_exp) && isArithmeticType(right_exp)) {
+            return getArithmeticResultType(left_exp, right_exp, exp);
+        }
+		else{
+			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line, exp->token, left_exp, right_exp ,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
 			exit(1);
 		}
 	}
@@ -671,6 +656,33 @@ char* evaluateExpression(node* exp){
 		}
 	
 	return "NULL";
+}
+
+int isArithmeticType(char* type) {
+    return !strcmp(type, "INT") || !strcmp(type, "FLOAT") || !strcmp(type, "DOUBLE");
+}
+
+char* getArithmeticResultType(char* left, char* right, node* exp) {
+    if (!strcmp(left, "INT") && !strcmp(right, "INT"))
+        return "INT";
+    else if (!strcmp(left, "FLOAT") && !strcmp(right, "FLOAT"))
+        return "FLOAT";
+    else if ((!strcmp(left, "DOUBLE") || !strcmp(right, "DOUBLE")))
+        return "DOUBLE";
+    else if ((!strcmp(left, "FLOAT") || !strcmp(right, "FLOAT")))
+        return "FLOAT";
+	else if (((!strcmp(left,"INT*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"INT*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
+			return "INT*";
+	else if (((!strcmp(left,"CHAR*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"CHAR*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
+		return "CHAR*";
+	else if (((!strcmp(left,"DOUBLE*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"DOUBLE*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
+		return "DOUBLE*";
+	else if (((!strcmp(left,"FLOAT*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"FLOAT*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
+		return "FLOAT*";
+	else {
+		printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line, exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+		exit(1);
+	}
 }
 
 /**
