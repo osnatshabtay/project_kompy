@@ -8,7 +8,7 @@ typedef struct node {
 	char* token;
 	char* father;
 	struct node** sons_nodes;
-	int sons_count; // TODO change name (prob num_of_sons)
+	int sons_count;
 	char* node_type;
 	int line_number;
 } node;
@@ -18,14 +18,13 @@ typedef struct symbolNode {
     int is_static;
     char* id;
     char* type;
-    int scopeID;
     node* params;
     struct symbolNode* next;
 } symbolNode;
 
 typedef struct scopeNode{
-	int scopeLevel;
-	symbolNode *symbolTable;
+	int scope_level;
+	symbolNode *symbol_table;
 	struct scopeNode *next;
 } scopeNode;
 
@@ -38,7 +37,6 @@ void addNodesList(node* add_to, node* to_add);
 void printTree(node* curr_node, int num_of_spaces);
 void freeNode(node* node_to_free, int free_sons);
 
-/* Semantic Check - Part 2 */
 symbolNode* symbolSearch (symbolNode* symbol_table, char* id);
 symbolNode* scopeSearch(char* id);
 

@@ -267,7 +267,7 @@ void pushStatementToStack(node* root, int scope_level){
 
 void pushScopeToScopeStack(scopeNode** scope_stack_top, node* scope_params, node** statements, int scope_level, int num_of_statements){      
 	scopeNode* new_scope = (scopeNode*) malloc(sizeof(scopeNode));
-	new_scope->scopeLevel = scope_level-1;
+	new_scope->scope_level = scope_level-1;
 	new_scope->next = (*scope_stack_top);
 	(*scope_stack_top) = new_scope;
 	if (scope_params){
@@ -390,8 +390,8 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 
 void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, int is_func, int is_static, node* params) {
 	symbolNode* new_node = (symbolNode*) malloc(sizeof(symbolNode));
-	new_node->next =(*scope_stack_top)->symbolTable;
-	(*scope_stack_top)->symbolTable = new_node;
+	new_node->next =(*scope_stack_top)->symbol_table;
+	(*scope_stack_top)->symbol_table = new_node;
 
 	new_node->id = (char*)(malloc (sizeof(symbol_id) + 1));
 	strncpy(new_node->id, symbol_id, sizeof(symbol_id)+1);
@@ -430,19 +430,19 @@ symbolNode* scopeSearch(char* id) {
 	int curr_level;
 
     while (curr_scope != NULL) {
-        symbolNode* found_symbol = symbolSearch(curr_scope->symbolTable, id);
+        symbolNode* found_symbol = symbolSearch(curr_scope->symbol_table, id);
         if (found_symbol != NULL) {
             return found_symbol;  
         }
 
-		curr_level = curr_scope->scopeLevel;
+		curr_level = curr_scope->scope_level;
         if (curr_level == 0) {
             break;
         }
 
         // skip scopes that are not direct parents by comparing scope levels
         curr_scope = curr_scope->next;
-        while (curr_scope != NULL && curr_scope->scopeLevel >= curr_level) {
+        while (curr_scope != NULL && curr_scope->scope_level >= curr_level) {
             curr_scope = curr_scope->next;
         }
     }
@@ -709,7 +709,7 @@ void checkForSymbolsDuplications(scopeNode* scope){
 	symbolNode* s1;
 	symbolNode* s2;
 	for(curr_scope = scope; curr_scope != NULL; curr_scope = curr_scope->next){
-		for(s1 = scope->symbolTable; s1 != NULL; s1 = s1->next){
+		for(s1 = scope->symbol_table; s1 != NULL; s1 = s1->next){
 			for(s2 = s1->next; s2 != NULL; s2 = s2->next){
 				if (!strcmp(s1->id, s2->id)){
 					if (s1->is_func){
