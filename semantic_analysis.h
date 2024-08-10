@@ -4,6 +4,7 @@
 // TODO - chage param order
 // TODO - change all varNames to var_names
 // TODO - pretiffy order of function declaration
+// TODO change all strings (for example - "ARGS_NONE")
 
 /* Define node structure for the abstract syntax tree (AST) - Part 1 */
 typedef struct node {
@@ -60,10 +61,10 @@ int evalReturn(node* funcNode, char* type);
 void evalPtr(node* ptrNode);
 void isSymbolExist(scopeNode* scope);
 void checkSymbols(scopeNode* scope);
-int checkFunctionCall(char *func_name, node *args);
+int checkFunctionCall(char *func_name, node *func_args);
 void checkStaticNonStaticCalls();
 void checkMainNonStaticCalls(node* tree);
-int checkFunctionArgs(node* params, node* callArgs);
+int checkFunctionArgs(node* func_params, node* func_args);
 void checkString(node* strNode, char* assType);
 void findFunctionsCalled(node* astNode);
 void printSymbolTable(struct scopeNode *node);

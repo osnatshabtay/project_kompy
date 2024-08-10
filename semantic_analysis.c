@@ -461,7 +461,7 @@ symbolNode* symbolSearch (symbolNode* symbol_table, char* id){
 symbolNode* scopeSearch(char* id) {
     scopeNode* curr_scope = SCOPE_STACK_TOP;
 	int curr_level;
-	
+
     while (curr_scope != NULL) {
         symbolNode* found_symbol = symbolSearch(curr_scope->symbolTable, id);
         if (found_symbol != NULL) {
@@ -786,21 +786,12 @@ void checkSymbols(scopeNode* scope){
     }
 }
 
-/**
- * checkFunctionCall - Validates a function call for correctness.
- * This function checks if a function call has been made to a declared function with the correct arguments.
- * It ensures the function exists and the provided arguments match the function's parameters in number and type.
- * Reports errors if the function is undeclared or the arguments do not match.
- * @param funcName: The name of the function being called.
- * @param callArgs: The AST node representing the arguments passed to the function.
- * @return: 1 if the function call is valid, 0 otherwise.
- */
-int checkFunctionCall(char *funcName, node *callArgs){
-    symbolNode *funcSymbol = scopeSearch(funcName);
-	if (funcSymbol !=NULL)
-		if (checkFunctionArgs(funcSymbol->params, callArgs))
+int checkFunctionCall(char* func_name, node* func_args){
+    symbolNode *func_symbol = scopeSearch(func_name);
+	if (func_symbol != NULL)
+		if (checkFunctionArgs(func_symbol->params, func_args))
 			return 1;
-    printf ("Error: Line %d: Undeclared function '%s' with unmatching arguements\n", callArgs->line,funcName);
+    printf ("Error: Line %d: Undeclared function '%s' with unmatching arguements\n", func_args->line, func_name);
 	exit(1);
 }
 
@@ -865,29 +856,27 @@ void checkMainNonStaticCalls(node* tree) {
     }
 }
 
-/**
- * checkFunctionArgs - Checks if the provided function call arguments match the function's parameters.
- * This function compares the actual arguments provided in a function call with the expected parameters
- * of the function, checking for both count and type. Reports an error if there is a mismatch.
- * @param params: The AST node representing the function's parameters.
- * @param callArgs: The AST node representing the arguments passed in the function call.
- * @return: 1 if the arguments match the parameters, 0 otherwise.
- */
-int checkFunctionArgs(node* params, node* callArgs){
-	if (!strcmp(params->token,"ARGS_NONE") && !strcmp(callArgs->token,"ARGS_NONE"))
+int checkFunctionArgs(node* func_params, node* func_args){
+	// no args
+	if (!strcmp(func_params->token,"ARGS_NONE") && !strcmp(func_args->token,"ARGS_NONE"))
 		return 1;
-	int count = 0;
-	for (int i = 0;i<params->count;i++)
-		count += params->nodes[i]->count;
-	if(count != callArgs->count)
+
+	// num of args == num of params
+	int expected_param_count = 0;
+	for (int i = 0; i < func_params->count; i++)
+		expected_param_count += func_params->nodes[i]->count;
+	if(expected_param_count != func_args->count)
 		return 0;
-	int k = 0;
-	for (int i = 0;i<params->count;i++){
-		for(int j = 0; j < params->nodes[i]->count;j++){
-			if (strcmp(params->nodes[i]->token, evaluateExpression(callArgs->nodes[k++])))
-				return 0;
-		}
-	}
+
+	// type matching
+    for (int i = 0, k = 0; i < func_params->count; i++) {
+        char* expected_type = func_params->nodes[i]->token;
+        for (int j = 0; j < func_params->nodes[i]->count; j++, k++) {
+            if (strcmp(expected_type, evaluateExpression(func_args->nodes[k]))) {
+                return 0;
+            }
+        }
+    }
 	return 1;
 }
 
