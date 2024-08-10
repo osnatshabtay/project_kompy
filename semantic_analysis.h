@@ -18,7 +18,6 @@ typedef struct symbolNode {
     int is_static;
     char* id;
     char* type;
-    char* data;
     int scopeID;
     node* params;
     struct symbolNode* next;
@@ -48,7 +47,7 @@ void pushStatementToStack(node* root, int scope_level);
 void pushScopeToScopeStack(scopeNode** scope_stack_top, node* params, node** statments, int scope_level, int stat_size);
 void pushStatementsToScope(node** statements, int size);
 void pushSymbolsToSymbolTable(node* var_declaration_nosde);
-void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, char* data, int is_func, int is_static, node* params);
+void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, int is_func, int is_static, node* params);
 void isValidPrtAssinment(node* ptr_node);
 void checkForSymbolsDuplications(scopeNode* scope);
 void checkStaticNonStaticCallsViolation();

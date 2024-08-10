@@ -283,11 +283,11 @@ void pushStatementsToScope(node** statements, int num_of_statements){
 		}
 
 		else if (!strcmp(statements[i]->token, "FUNCTION")){
-			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, NULL, 1, 0, statements[i]->sons_nodes[1]);
+			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, 1, 0, statements[i]->sons_nodes[1]);
 		}
 
 		else if (!strcmp(statements[i]->token, "STATIC-FN")) {
-			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, NULL, 1, 1, statements[i]->sons_nodes[1]);
+			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, 1, 1, statements[i]->sons_nodes[1]);
 		}
 
 		else if (!strcmp(statements[i]->token, "FUNC_CALL")){
@@ -342,7 +342,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 					exit(1);
 				}
 				else
-					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, vars_declared[j]->sons_nodes[1]->token, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0, NULL);
 			
 			else if ((!strcmp(vars_declared[j]->token, "<-") && strcmp(var_type, "STRING") == 0)){
 				char* exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]);
@@ -353,7 +353,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 				else {
 					exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[1]);
 					if (!strcmp(var_type, exp_type))
-						addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, vars_declared[j]->sons_nodes[1]->token, 0, 0, NULL);
+						addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0, NULL);
 					else{
 						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type, var_type);
 						exit(1);
@@ -368,16 +368,16 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 					exit(1);
 				}
 				else
-					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->token, var_type, NULL, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->token, var_type, 0, 0, NULL);
 			}
 			
 			else{
 				if (strcmp(vars_declared[j]->token, "<-"))
-					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->token, var_type, NULL, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->token, var_type, 0, 0, NULL);
 				else{
 					char* exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[1]);
 					if (!strcmp(var_type, exp_type))
-						addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, vars_declared[j]->sons_nodes[1]->token, 0, 0, NULL);
+						addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0, NULL);
 					else {
 						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type, var_type);
 						exit(1);
@@ -388,7 +388,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 	}
 }
 
-void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, char* data, int is_func, int is_static, node* params) {
+void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, int is_func, int is_static, node* params) {
 	symbolNode* new_node = (symbolNode*) malloc(sizeof(symbolNode));
 	new_node->next =(*scope_stack_top)->symbolTable;
 	(*scope_stack_top)->symbolTable = new_node;
@@ -398,13 +398,6 @@ void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* 
 
 	new_node->type = (char*)(malloc (sizeof(symbol_type) + 1));
 	strncpy(new_node->type, symbol_type, sizeof(symbol_type)+1);
-
-	if (data != NULL) {
-		new_node->data = (char*)(malloc (sizeof(data) + 1));
-		strncpy(new_node->data, data, sizeof(data)+1);
-	}
-	else
-		new_node->data = NULL;
 
 	new_node->is_func = is_func;
 	new_node->is_static = is_static;
