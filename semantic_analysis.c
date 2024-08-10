@@ -512,14 +512,13 @@ char* evaluateExpression(node* exp){
 		return exp->node_type;
 
 	else if (!strcmp(exp->token, "FUNC_CALL")){
-		symbolNode *funcSymbol;
 		if(checkFunctionCall(exp->nodes[0]->token, exp->nodes[1])){
-			funcSymbol = scopeSearch(exp->nodes[0]->token);
-			return funcSymbol->type;
+			symbolNode* func_symbol = scopeSearch(exp->nodes[0]->token);
+			return func_symbol->type;
 		}
 	}
 
-	else if (!strcmp(exp->token,"+")||!strcmp(exp->token,"-")||!strcmp(exp->token,"*")||!strcmp(exp->token,"/")){
+	else if (!strcmp(exp->token, "*") || !strcmp(exp->token, "/") || !strcmp(exp->token, "+") || !strcmp(exp->token, "-")){
 		char* left_exp, *right_exp;
         left_exp = evaluateExpression(exp->nodes[0]);
         right_exp = evaluateExpression(exp->nodes[1]);
@@ -538,7 +537,7 @@ char* evaluateExpression(node* exp){
         char* left, *right;
         left = evaluateExpression(exp->nodes[0]);
         right = evaluateExpression(exp->nodes[1]);
-        if((!strcmp(left,"INT") && !strcmp(right,"INT")) || (!strcmp(left,"DOUBLE") && !strcmp(right,"DOUBLE")) || (!strcmp(left,"FLOAT") && !strcmp(right,"FLOAT")))
+        if(isCompatibleForComparison(left, right))
             return "BOOL";
 		else{
 			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line,exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
@@ -685,6 +684,11 @@ char* getArithmeticResultType(char* left, char* right, node* exp) {
 	}
 }
 
+int isCompatibleForComparison(char* left, char* right) {
+    return (!strcmp(left, right) && !strcmp(right, "INT")) ||
+           (!strcmp(left, right) && !strcmp(right, "FLOAT")) ||
+           (!strcmp(left, right) && !strcmp(right, "DOUBLE"));
+}
 /**
  * checkFuncReturn - Checks the return type of a function.
  * This function validates the return type of a function by comparing the function's declared return type

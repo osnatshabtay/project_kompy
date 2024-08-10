@@ -25,10 +25,13 @@ private void foo_4() { var int: a; a <- 2; }
 
 
 public void main(): static{
+    var double: d;
+    var bool: b;
     var int: y,z; 
     var int: o <-foo(5,9, 'c');
     y <-foo(5,9, 'c');
-    y<-8;
+    y<-8+4;
     z<-y;
-
+    d<-1.1+2;
+    b<-d<3.3;
 }

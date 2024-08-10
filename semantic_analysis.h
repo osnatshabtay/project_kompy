@@ -64,6 +64,7 @@ void checkSymbols(scopeNode* scope);
 int checkFunctionCall(char *func_name, node *func_args);
 char* getArithmeticResultType(char* left, char* right, node* exp);
 int isArithmeticType(char* type);
+int isCompatibleForComparison(char* left, char* right);
 void checkStaticNonStaticCalls();
 void checkMainNonStaticCalls(node* tree);
 int checkFunctionArgs(node* func_params, node* func_args);
