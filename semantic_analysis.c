@@ -1,9 +1,7 @@
 #include "semantic_analysis.h"
-#include <stddef.h>
-#include <ctype.h>
 
 scopeNode* SCOPE_STACK_TOP = NULL;
-int mainCounter = 0;
+int NUM_OF_MAIN_FUNCTIONS = 0;
 char* CURR_FUNCTION = NULL;
 char* CALLED_FUNCTIONS[256];
 char* HAS_CALLED_FUNCTIONS[256];
@@ -15,7 +13,6 @@ node* makeNode(char* token) {
 	char *new_token = (char*)malloc(sizeof(token) + 1);
 	strcpy(new_token, token);
 	newnode->token = new_token;
-	newnode->father = NULL;
 	newnode->sons_nodes = NULL;
 	newnode->sons_count = 0;
 	newnode->node_type = NULL;
@@ -231,7 +228,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'M': // MAIN
 			if (!strcmp(root->token, "MAIN")) {
 				scope_level++;
-				mainCounter++;
+				NUM_OF_MAIN_FUNCTIONS++;
 				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[0]->sons_nodes, scope_level, root->sons_nodes[0]->sons_count);
 			}
 			break;
@@ -828,10 +825,10 @@ void checkStringAssignment(node* str_node, char* assigned_val_type){
 }
 
 void findCalledFunctions(node* tree) {
-    if (tree == NULL) return;
+    if (tree == NULL) 
+		return;
 
     char* token = tree->token;
-
 	if (!strcmp(token, "FUNCTION_CALL")) {
         if (CURR_FUNCTION) {
 			HAS_CALLED_FUNCTIONS[HAS_CALLED_FUNCTIONS_INDEX++] = tree->sons_nodes[0]->token;

@@ -316,7 +316,6 @@ if_statment:
         if_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&if_node, $3); 
         addNodesList(if_node,$5); 
-        if_node->sons_nodes[1]->father = "IF"; 
         addSonNodeToFatherNode(&$$,if_node);
     }  %prec PREC_IF
     ;
@@ -328,7 +327,6 @@ if_else_statment:
         if_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&if_node, $3); 
         addNodesList(if_node,$5); 
-        if_node->sons_nodes[1]->father = "IF"; 
         addNodesList(if_node, $7); 
         addSonNodeToFatherNode(&$$,if_node);}
     ;
@@ -760,11 +758,11 @@ id:
 
 
 int yyerror(char* s){
-    if(mainCounter == 1){
-        printf("Error: The program cannot have more than one 'main' function.\n");
+    if(NUM_OF_MAIN_FUNCTIONS == 1){
+        printf("Error need just one main function.\n");
         exit(1);
-    } else if(mainCounter == 0){
-        printf("Error: The program must contain a 'main' function.\n");
+    } else if(NUM_OF_MAIN_FUNCTIONS == 0){
+        printf("Error must one main function.\n");
         exit(1);
     }
     printf("%s: ERROR line %d - '%s'\n", s, number_line, yytext);

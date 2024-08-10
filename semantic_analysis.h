@@ -1,9 +1,10 @@
 #ifndef SEMANTIC_ANALYSIS_H
 #define SEMANTIC_ANALYSIS_H
 
+#include <stddef.h>
+#include <ctype.h>
 typedef struct node {
 	char* token;
-	char* father;
 	struct node** sons_nodes;
 	int sons_count;
 	char* node_type;
