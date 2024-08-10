@@ -1,5 +1,5 @@
-#ifndef SEMANTIC_ANALYSIS_H
-#define SEMANTIC_ANALYSIS_H
+#ifndef SEMANTIC_HEADER
+#define SEMANTIC_HEADER
 
 #include <stddef.h>
 #include <ctype.h>

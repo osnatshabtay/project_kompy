@@ -1,4 +1,4 @@
-#include "semantic_analysis.h"
+#include "semantic.h"
 
 scope* SCOPE_STACK_TOP = NULL;
 int NUM_OF_MAIN_FUNCTIONS = 0;

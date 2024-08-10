@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "lex.yy.c"
-#include "semantic_analysis.c"
+#include "semantic.c"
 int yylex(void);
 int yyerror(char *s);
 
