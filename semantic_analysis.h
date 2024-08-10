@@ -51,13 +51,13 @@ void checkStringAssignment(node* str_node, char* assigned_val_type);
 void findCalledFunctions(node* astNode);
 
 int isVarDeclared(char* var_name);
-int checkFunctionArgs(node* func_params, node* func_args);
 int isValidReturnType(node *func_node);
 int isValidReturnStatement(node* func_node, char* expected_ret_type);
-int checkFunctionCall(node* func_args, char* func_name);
 int isArithmeticType(char* type);
 int isCompatibleForComparison(char* left, char* right);
 int isEqualType(char* left, char* right);
+int checkFunctionArgs(node* func_params, node* func_args);
+int checkFunctionCall(node* func_args, char* func_name);
 
 char* getPointerBaseType(char* type);
 char* getArithmeticResultType(node* exp, char* left, char* right);
