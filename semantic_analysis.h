@@ -1,9 +1,6 @@
 #ifndef SEMANTIC_ANALYSIS_H
 #define SEMANTIC_ANALYSIS_H
 
-// TODO - chage param order
-// TODO change all strings (for example - "ARGS_NONE")
-
 typedef struct node {
 	char* token;
 	char* father;

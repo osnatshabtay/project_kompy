@@ -2,7 +2,6 @@
 #include <stddef.h>
 #include <ctype.h>
 
-/* Global variables */
 scopeNode* SCOPE_STACK_TOP = NULL;
 int mainCounter = 0;
 char* CURR_FUNCTION = NULL;
@@ -174,24 +173,24 @@ void pushStatementToStack(node* root, int scope_level){
 				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[3]->sons_nodes, scope_level, root->sons_nodes[3]->sons_count);
 				char* initType = checkExpAndReturnItsType(root->sons_nodes[0]);
 				if(strcmp("INT" ,initType)){
-					printf("Error: Line %d: FOR initialization requires an 'INT' type.\n", root->sons_nodes[0]->line_number);
+					printf("Error Line %d: FOR init incorrect.\n", root->sons_nodes[0]->line_number);
 					exit(1);
 				}
 				char* exp_type = checkExpAndReturnItsType(root->sons_nodes[1]);
 				if(strcmp("BOOL" ,exp_type)){
-					printf("Error: Line %d: FOR-condition requires return type 'BOOL'.\n", root->sons_nodes[0]->line_number);
+					printf("Error Line %d FOR condition incorrect'.\n", root->sons_nodes[0]->line_number);
 					exit(1);
 				}
 				char* incType = checkExpAndReturnItsType(root->sons_nodes[2]);
 				if(strcmp("INT" ,incType)){
-					printf("Error: Line %d: FOR-increment requires return type 'INT'.\n", root->sons_nodes[0]->line_number);
+					printf("Error Line %d FOR increment incorrect.\n", root->sons_nodes[0]->line_number);
 					exit(1);
 				}
 			}
 			break;
 
-		case 'S': // STATIC-FN
-			if (!strcmp(root->token, "STATIC-FN")) {
+		case 'S': // STATIC
+			if (!strcmp(root->token, "STATIC")) {
 				scope_level++;
 				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->sons_nodes[1], root->sons_nodes[3]->sons_nodes, scope_level, root->sons_nodes[3]->sons_count);
 				isValidReturnType(root);
@@ -204,7 +203,7 @@ void pushStatementToStack(node* root, int scope_level){
 				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[1]->sons_nodes, scope_level, root->sons_nodes[1]->sons_count);
 				char* exp_type = checkExpAndReturnItsType(root->sons_nodes[0]);
 				if(strcmp("BOOL" ,exp_type)){
-					printf("Error: Line %d: Invalid WHILE condition. Expected return type 'BOOL'.\n", root->line_number);
+					printf("Error Line %d: WHILE condition incorrect'.\n", root->line_number);
 					exit(1);
 				}
 			}
@@ -216,7 +215,7 @@ void pushStatementToStack(node* root, int scope_level){
 				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[0]->sons_nodes, scope_level, root->sons_nodes[0]->sons_count);
 				char* exp_type = checkExpAndReturnItsType(root->sons_nodes[1]);
 				if(strcmp("BOOL" ,exp_type)){
-					printf("Error: Line %d: Invalid DO-WHILE condition. Expected return type 'BOOL'.\n", root->line_number);
+					printf("Error Line %d: DO-WHILE condition incorrect.\n", root->line_number);
 					exit(1);
 				}
 			}
@@ -243,7 +242,7 @@ void pushStatementToStack(node* root, int scope_level){
 				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->sons_nodes[1]->sons_nodes, scope_level, root->sons_nodes[1]->sons_count);
 				char* exp_type = checkExpAndReturnItsType(root->sons_nodes[0]);
 				if(strcmp("BOOL" ,exp_type)){
-					printf("Error: Line %d: Invalid IF condition. Expected return type 'BOOL'.\n",root->line_number);
+					printf("Error Line %d IF condition incorrect'.\n",root->line_number);
 					exit(1);
 				}
 			}
@@ -286,40 +285,36 @@ void pushStatementsToScope(node** statements, int num_of_statements){
 			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[1], statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, 1, 0);
 		}
 
-		else if (!strcmp(statements[i]->token, "STATIC-FN")) {
+		else if (!strcmp(statements[i]->token, "STATIC")) {
 			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[1], statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, 1, 1);
 		}
 
-		else if (!strcmp(statements[i]->token, "FUNC_CALL")){
+		else if (!strcmp(statements[i]->token, "FUNCTION_CALL")){
 			checkFunctionCall(statements[i]->sons_nodes[1], statements[i]->sons_nodes[0]->token);
 		}
 
 		else if(!strcmp(statements[i]->token, "<-")){
-        	if (isVarDeclared(statements[i]->sons_nodes[0]->token) && strcmp(statements[i]->sons_nodes[0]->token, "PTR")){
+        	if (isVarDeclared(statements[i]->sons_nodes[0]->token) && strcmp(statements[i]->sons_nodes[0]->token, "POINTER")){
                 char *left = scopeSearch(statements[i]->sons_nodes[0]->token)->type;
                 char *right = checkExpAndReturnItsType(statements[i]->sons_nodes[1]);
 				if (!strcmp(left, "STRING"))
 					checkStringAssignment(statements[i], right);
 				else if (statements[i]->sons_nodes[0]->sons_count > 0){
-					printf("Error: Line %d: %s cannot have index.\n", statements[i]->sons_nodes[0]->line_number, left);
+					printf("Error Line %d %s index need to be int.\n", statements[i]->sons_nodes[0]->line_number, left);
 					exit(1);
 				}
 				else if (!strcmp(right, "NULL") && (strcmp(left, "INT*") && strcmp(left, "CHAR*") && strcmp(left, "DOUBLE*")) && strcmp(left, "FLOAT*")){
-					printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", statements[i]->line_number, right, left);
-					exit(1);
-				}
-            	else if (strcmp(right,left) && strcmp(right,"undefined")){
-                    printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", statements[i]->line_number, right, left);
+					printf("Error Line %d can not assign %s to %s\n", statements[i]->line_number, right, left);
 					exit(1);
 				}
 			}
 			
-			else if (!strcmp(statements[i]->sons_nodes[0]->token, "PTR") && isVarDeclared(statements[i]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->token))
+			else if (!strcmp(statements[i]->sons_nodes[0]->token, "POINTER") && isVarDeclared(statements[i]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->token))
 				isValidPrtAssinment(statements[i]);
 			
 			else{
 				checkExpAndReturnItsType(statements[i]->sons_nodes[1]);
-				printf("Error: Line %d: Undeclared variable [%s]\n", statements[i]->line_number, statements[i]->sons_nodes[0]->token);
+				printf("Error Line %d Undeclared variable [%s]\n", statements[i]->line_number, statements[i]->sons_nodes[0]->token);
 				exit(1);
 			}
 		}
@@ -338,7 +333,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 		for(int j = 0; j < num_of_vars; j++){
 			if ((!strcmp(vars_declared[j]->token, "<-") && vars_declared[j]->sons_nodes[1]->node_type != NULL && !strcmp("NULL", vars_declared[j]->sons_nodes[1]->node_type)))
 				if (strcmp(var_type, "INT*") && strcmp(var_type, "CHAR*") && strcmp(var_type, "DOUBLE*") && strcmp(var_type, "FLOAT*")){
-					printf("Error: Line %d: Assignment type mismatch: can not assign NULL to %s\n", vars_declared[j]->line_number, var_type);
+					printf("Error Line %d can not assign NULL to %s\n", vars_declared[j]->line_number, var_type);
 					exit(1);
 				}
 				else
@@ -347,7 +342,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 			else if ((!strcmp(vars_declared[j]->token, "<-") && strcmp(var_type, "STRING") == 0)){
 				char* exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]);
 				if(strcmp("INT", exp_type)){
-					printf("Error: Line %d: Size of string must be type 'INT' not '%s'\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type);
+					printf("Error Line %d Size need be INT \n", vars_declared[j]->sons_nodes[0]->line_number);
 					exit(1);
 				}
 				else {
@@ -355,7 +350,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 					if (!strcmp(var_type, exp_type))
 						addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0);
 					else{
-						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type, var_type);
+						printf("Error Line %d can not assign %s to %s\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type, var_type);
 						exit(1);
 					}
 				}
@@ -364,7 +359,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 			else if (strcmp(vars_declared[j]->token, "<-") && strcmp(var_type, "STRING") == 0){
 				char* exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[0]->sons_nodes[0]);
 				if(strcmp("INT", exp_type)){
-					printf("Error: Line %d: Size of string must be type 'INT' not '%s'\n", vars_declared[j]->line_number, exp_type);
+					printf("Error Line %d Size need be INT'\n", vars_declared[j]->line_number);
 					exit(1);
 				}
 				else
@@ -379,7 +374,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 					if (!strcmp(var_type, exp_type))
 						addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0);
 					else {
-						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type, var_type);
+						printf("Error Line %d can not assign %s to %s\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type, var_type);
 						exit(1);
 					}
 				}	
@@ -460,7 +455,7 @@ char* checkExpAndReturnItsType(node* exp){
 			if(!strcmp(symbol_node->type, "STRING") && exp->sons_count > 0){
 				char* indexType = checkExpAndReturnItsType(exp->sons_nodes[0]->sons_nodes[0]);
 				if(strcmp("INT", indexType)){
-					printf("Error: Line %d: Size of string must be type 'INT' not '%s'.\n", exp->line_number ,indexType);
+					printf("Error Line %d Size of string need to be INT.\n", exp->line_number);
 					exit(1);
 				}
 			return "CHAR";
@@ -468,7 +463,7 @@ char* checkExpAndReturnItsType(node* exp){
 			return symbol_node->type;
 		}
         else{
-			printf("Error: Line %d: Undeclared variable '%s'.\n", exp->line_number, exp->token);
+			printf("Error Line %d Undeclared variable '%s'.\n", exp->line_number, exp->token);
 			exit(1);
 		}
 	}
@@ -481,7 +476,7 @@ char* checkExpAndReturnItsType(node* exp){
                 char *left = scopeSearch(exp->sons_nodes[0]->token)->type;
                 char *right = checkExpAndReturnItsType(exp->sons_nodes[1]);
             	if (strcmp(right, "NULL") && strcmp(right, left)){
-                    printf("Error: Line %d: Assignment type mismatch: cannot assign '%s' to '%s'.\n", exp->line_number, right, left);
+                    printf("Error Line %d cannot assign '%s' to '%s'.\n", exp->line_number, right, left);
 					exit(1);
 				}
 				else
@@ -495,7 +490,7 @@ char* checkExpAndReturnItsType(node* exp){
 		if(isArithmeticType(left) || !strcmp(left,"CHAR")){
 			char* result = malloc(strlen(left) + 2); // +2 for the '*' and the null terminator
 			if (result == NULL) {
-				printf("Error: Memory allocation failed.\n");
+				printf("Memory allocation failed.\n");
 				exit(1);
 			}
 			strcpy(result, left);
@@ -503,7 +498,7 @@ char* checkExpAndReturnItsType(node* exp){
 			return result;
 		}
 		else{
-			printf("Error: Line %d: Cannot perform '&' on '%s' - [&%s]\n", exp->sons_nodes[0]->line_number, left,exp->sons_nodes[0]->token);
+			printf("Error Line %d Cannot use '&' on '%s'\n", exp->sons_nodes[0]->line_number, left);
 			exit(1);
 		}
 	}
@@ -514,17 +509,17 @@ char* checkExpAndReturnItsType(node* exp){
 		if(!strcmp(left,"STRING"))
             return "INT";
 		else{
-			printf("Error: Line %d: Cannot perform || on '%s' - [|%s|]\n", exp->sons_nodes[0]->line_number, left,exp->sons_nodes[0]->token);
+			printf("Error Line %d Cannot use len opertaor on '%s'\n", exp->sons_nodes[0]->line_number, left);
 			exit(1);
 		}
 	}	
 	
-	else if(!strcmp(exp->token, "PTR")){
+	else if(!strcmp(exp->token, "POINTER")){
         char* left;
         left = checkExpAndReturnItsType(exp->sons_nodes[0]->sons_nodes[0]);
 		char* base_type = getPointerBaseType(left);
         if(!strcmp(left, "NULL")){
-			printf("Error: Line %d: '%s' is not pointer\n", exp->sons_nodes[0]->sons_nodes[0]->line_number ,left);
+			printf("Error Line %d '%s' is not pointer\n", exp->sons_nodes[0]->sons_nodes[0]->line_number ,left);
 			exit(1);
 		}
 		return base_type;
@@ -536,12 +531,12 @@ char* checkExpAndReturnItsType(node* exp){
         if(!strcmp(left,"BOOL"))
             return "BOOL";
 		else{
-			printf("Error: Line %d: Cannot perform ! on '%s' - [!%s]\n", exp->line_number ,left,exp->sons_nodes[0]->token);
+			printf("Error Line %d: Cannot use ! on '%s' \n", exp->line_number ,left);
 			exit(1);
 		}
 	}
 
-	else if (!strcmp(exp->token, "FUNC_CALL")){
+	else if (!strcmp(exp->token, "FUNCTION_CALL")){
 		if(checkFunctionCall(exp->sons_nodes[1], exp->sons_nodes[0]->token)){
 			symbolNode* func_symbol = scopeSearch(exp->sons_nodes[0]->token);
 			return func_symbol->type;
@@ -556,7 +551,7 @@ char* checkExpAndReturnItsType(node* exp){
             return "BOOL";
         }
 		else{
-			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line_number ,exp->token, left, right,exp->sons_nodes[0]->token, exp->token, exp->sons_nodes[1]->token);
+			printf("Error Line %d Cannot use '%s' between '%s' and '%s' \n", exp->line_number ,exp->token, left, right);
 			exit(1);
 		}
 	}
@@ -568,7 +563,7 @@ char* checkExpAndReturnItsType(node* exp){
         if(!strcmp(left,"BOOL") && !strcmp(right,"BOOL"))
             return "BOOL";
 		else {
-			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line_number, exp->token, left, right,exp->sons_nodes[0]->token, exp->token, exp->sons_nodes[1]->token);
+			printf("Error Line %d Cannot use '%s' between '%s' and '%s' \n", exp->line_number, exp->token, left, right);
 			exit(1);
 		}
 	}
@@ -580,7 +575,7 @@ char* checkExpAndReturnItsType(node* exp){
         if(isCompatibleForComparison(left, right))
             return "BOOL";
 		else{
-			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line_number,exp->token, left, right,exp->sons_nodes[0]->token, exp->token, exp->sons_nodes[1]->token);
+			printf("Error Line %d Cannot use '%s' between '%s' and '%s'\n", exp->line_number,exp->token, left, right);
 			exit(1);
 		}
 	} 
@@ -595,7 +590,7 @@ char* checkExpAndReturnItsType(node* exp){
             return getArithmeticResultType(exp, left_exp, right_exp);
         }
 		else{
-			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line_number, exp->token, left_exp, right_exp ,exp->sons_nodes[0]->token, exp->token, exp->sons_nodes[1]->token);
+			printf("Error Line %d Cannot use '%s' between '%s' and '%s'\n", exp->line_number, exp->token, left_exp, right_exp);
 			exit(1);
 		}
 	}
@@ -627,7 +622,7 @@ char* getArithmeticResultType(node* exp, char* left, char* right) {
 	else if (((!strcmp(left,"FLOAT*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"FLOAT*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
 		return "FLOAT*";
 	else {
-		printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line_number, exp->token, left, right,exp->sons_nodes[0]->token, exp->token, exp->sons_nodes[1]->token);
+		printf("Error Line %d Cannot use '%s' operation between '%s' and '%s'\n", exp->line_number, exp->token, left, right);
 		exit(1);
 	}
 }
@@ -666,10 +661,10 @@ int isValidReturnType(node* func_node){
     int is_valit_ret_statement = isValidReturnStatement(func_node->sons_nodes[3], func_type);
 	if (is_valit_ret_statement == 0){
 		if (!strcmp(func_type,"VOID")){
-        	printf ("Error: Line %d: Void function '%s' cannot return value.\n", func_node->line_number, func_node->sons_nodes[0]->token);
+        	printf ("Error Line %d Void function can not return value.\n", func_node->line_number);
 		}
 		else{
-        	printf ("Error: Line %d: Function '%s' returns an invalid value.\n", func_node->line_number ,func_node->sons_nodes[0]->token);
+        	printf ("Error Line %d Function %s returns an invalid value.\n", func_node->line_number ,func_node->sons_nodes[0]->token);
 		}
 		exit(1);
 	}	
@@ -678,7 +673,7 @@ int isValidReturnType(node* func_node){
 
 int isValidReturnStatement(node* func_node, char* expected_ret_type){
 	for (int i = 0; i < func_node->sons_count; i++){
-		if(!strcmp(func_node->sons_nodes[i]->token, "RET")){
+		if(!strcmp(func_node->sons_nodes[i]->token, "RETURN")){
 			if (func_node->sons_nodes[i]->sons_count > 0){
 				char* actual_ret_type = checkExpAndReturnItsType(func_node->sons_nodes[i]->sons_nodes[0]);
 				if (strcmp(actual_ret_type, expected_ret_type))
@@ -699,7 +694,7 @@ void isValidPrtAssinment(node* ptr_node){
 	char *left = checkExpAndReturnItsType(ptr_node->sons_nodes[0]);
 	char *right = checkExpAndReturnItsType(ptr_node->sons_nodes[1]);
 	if (strcmp(right,left)){
-		printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", ptr_node->line_number, right, left);
+		printf("Error Line %d can not assign %s to %s\n", ptr_node->line_number, right, left);
 		exit(1);
 	}
 }
@@ -713,11 +708,11 @@ void checkForSymbolsDuplications(scopeNode* scope){
 			for(s2 = s1->next; s2 != NULL; s2 = s2->next){
 				if (!strcmp(s1->id, s2->id)){
 					if (s1->is_func){
-						printf ("Re-declaration of function (%s)\n", s1->id);
+						printf ("function name is not valid -%s\n", s1->id);
 						exit(1);
 					}
 					else{
-						printf ("Re-declaration of variable (%s)\n", s1->id);
+						printf ("variable name is not valid - %s\n", s1->id);
 						exit(1);
 					}
 				}
@@ -731,7 +726,7 @@ int checkFunctionCall(node* func_args, char* func_name){
 	if (func_symbol != NULL)
 		if (checkFunctionArgs(func_symbol->params, func_args))
 			return 1;
-    printf ("Error: Line %d: Undeclared function '%s' with unmatching arguements\n", func_args->line_number, func_name);
+    printf ("Error Line %d call to this function '%s' without match arguements\n", func_args->line_number, func_name);
 	exit(1);
 }
 
@@ -745,7 +740,7 @@ void checkStaticNonStaticCallsViolation() {
 
                 if (symbol_of_calling_func != NULL) {
                     if (symbol_of_calling_func->is_static && !called_func_symbol->is_static) {
-                        printf("Error: Static function '%s' cannot call non-static function '%s'.\n", symbol_of_calling_func->id, HAS_CALLED_FUNCTIONS[j]);
+                        printf("Error Static function cannot call non-static function .\n");
                         exit(1);
                     }
 				}
@@ -767,11 +762,11 @@ void checkMainNonStaticCalls(node* tree) {
         inMain = 1;
     }
 
-    if (strcmp(token, "FUNC_CALL") == 0) {
+    if (strcmp(token, "FUNCTION_CALL") == 0) {
         if (inMain) {
             symbolNode* called_func_symbol = scopeSearch(tree->sons_nodes[0]->token);
             if (called_func_symbol != NULL && !called_func_symbol->is_static) {
-                printf("Error: 'main' function cannot call non-static function '%s'.\n", called_func_symbol->id);
+                printf("Error Static function cannot call non-static function .\n");
                 exit(1);
             }
         }
@@ -814,18 +809,18 @@ int checkFunctionArgs(node* func_params, node* func_args){
 void checkStringAssignment(node* str_node, char* assigned_val_type){
 	if (str_node->sons_nodes[0]->sons_count == 0){
 		if(strcmp("STRING", assigned_val_type)){
-			printf("Error: Line %d: Assignment type mismatch: cannot assign '%s' to STRING\n", str_node->sons_nodes[0]->line_number ,assigned_val_type);
+			printf("Error Line %d can not assign '%s' to be STRING\n", str_node->sons_nodes[0]->line_number ,assigned_val_type);
 			exit(1);
 		}
 	}
 	if(strcmp(assigned_val_type,"CHAR") && str_node->sons_nodes[0]->sons_count != 0 && !strcmp(str_node->sons_nodes[0]->sons_nodes[0]->token, "INDEX")){
-		printf("Error: Line %d: Assignment type mismatch - expected 'CHAR' for string array cell, but found '%s'.\n", str_node->sons_nodes[0]->line_number ,assigned_val_type);
+		printf("Error Line %d can not do this action.\n", str_node->sons_nodes[0]->line_number);
 		exit(1);
 	}
 	if (str_node->sons_nodes[0]->sons_count != 0 && !strcmp(str_node->sons_nodes[0]->sons_nodes[0]->token, "INDEX")){
 		char* indexType = checkExpAndReturnItsType(str_node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]);
 		if(strcmp("INT", indexType)){
-			printf("Error: Line %d: Size of string must be type 'INT' not '%s'\n", str_node->sons_nodes[0]->line_number ,indexType);
+			printf("Error Line %d  Size of string neet be INT\n", str_node->sons_nodes[0]->line_number);
 			exit(1);
 		}
 	}
@@ -837,13 +832,13 @@ void findCalledFunctions(node* tree) {
 
     char* token = tree->token;
 
-	if (!strcmp(token, "FUNC_CALL")) {
+	if (!strcmp(token, "FUNCTION_CALL")) {
         if (CURR_FUNCTION) {
 			HAS_CALLED_FUNCTIONS[HAS_CALLED_FUNCTIONS_INDEX++] = tree->sons_nodes[0]->token;
             CALLED_FUNCTIONS[CALLED_FUNCTIONS_INDEX++] = CURR_FUNCTION; 
         }
     }
-    else if (!strcmp(token, "FUNCTION") || !strcmp(token, "STATIC-FN")) {
+    else if (!strcmp(token, "FUNCTION") || !strcmp(token, "STATIC")) {
         if (tree->sons_nodes[0] && tree->sons_nodes[0]->token) {
             CURR_FUNCTION = tree->sons_nodes[0]->token;
 		}
