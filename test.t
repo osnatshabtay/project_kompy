@@ -1,5 +1,6 @@
 public int foo(args>> int: y, z; char: ch): static {
-     return 0; 
+     string a[30] <- "moshe";
+     return |a|; 
     }
 public int foo_2(){ 
     var int: a;

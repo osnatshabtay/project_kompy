@@ -55,7 +55,7 @@ void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* 
 int isVarDeclared(char* var_name);
 symbolNode* symbolSearch (symbolNode* symbol_table, char* id);
 symbolNode* scopeSearch(char* id);
-char* evaluateExpression(node* exp);
+char* checkExpAndReturnType(node* exp);
 int checkFuncReturn(node *funcNode);
 int evalReturn(node* funcNode, char* type);
 void evalPtr(node* ptrNode);
