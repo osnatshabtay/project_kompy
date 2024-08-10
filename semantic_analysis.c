@@ -533,7 +533,7 @@ char* evaluateExpression(node* exp){
 		}
 	}
 
-	else if(!strcmp(exp->token,">")||!strcmp(exp->token,"<")||!strcmp(exp->token,">=")||!strcmp(exp->token,"<=")){
+	else if(!strcmp(exp->token, ">") || !strcmp(exp->token, "<") || !strcmp(exp->token, ">=") || !strcmp(exp->token, "<=")){
         char* left, *right;
         left = evaluateExpression(exp->nodes[0]);
         right = evaluateExpression(exp->nodes[1]);
@@ -545,7 +545,7 @@ char* evaluateExpression(node* exp){
 		}
 	}
 
-    else if(!strcmp(exp->token,"&&")||!strcmp(exp->token,"||")){
+    else if(!strcmp(exp->token, "&&") || !strcmp(exp->token, "||")){
         char* left, *right;
         left = evaluateExpression(exp->nodes[0]);
         right = evaluateExpression(exp->nodes[1]);
@@ -557,35 +557,20 @@ char* evaluateExpression(node* exp){
 		}
 	}
 
-	else if(!strcmp(exp->token,"==")||!strcmp(exp->token,"!=")){
+	else if(!strcmp(exp->token, "==") || !strcmp(exp->token, "!=")){
         char* left, *right;
         left = evaluateExpression(exp->nodes[0]);
         right = evaluateExpression(exp->nodes[1]);
-        if(!strcmp(left,"INT")&&!strcmp(right,"INT"))
+        if (isEqualType(left, right)) {
             return "BOOL";
-        else if(!strcmp(left,"BOOL")&&!strcmp(right,"BOOL"))
-            return "BOOL";
-        else if(!strcmp(left,"CHAR")&&!strcmp(right,"CHAR"))
-            return "BOOL";  
-        else if(!strcmp(left,"DOUBLE")&&!strcmp(right,"DOUBLE"))
-            return "BOOL";
-		else if(!strcmp(left,"FLOAT")&&!strcmp(right,"FLOAT"))
-            return "BOOL";
-        else if(!strcmp(left,"INT*")&&!strcmp(right,"INT*"))
-            return "BOOL";
-		else if(!strcmp(left,"CHAR*")&&!strcmp(right,"CHAR*"))
-			return "BOOL";
-		else if(!strcmp(left,"DOUBLE*")&&!strcmp(right,"DOUBLE*"))
-			return "BOOL";
-		else if(!strcmp(left,"FLOAT*")&&!strcmp(right,"FLOAT*"))
-			return "BOOL";
+        }
 		else{
 			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line ,exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
 			exit(1);
 		}
 	}
 
-	else if(!strcmp(exp->token,"NOT")){
+	else if(!strcmp(exp->token, "NOT")){
         char* left;
         left = evaluateExpression(exp->nodes[0]);
         if(!strcmp(left,"BOOL"))
@@ -596,21 +581,15 @@ char* evaluateExpression(node* exp){
 		}
 	}
 
-	else if(!strcmp(exp->token,"PTR")){
+	else if(!strcmp(exp->token, "PTR")){
         char* left;
         left = evaluateExpression(exp->nodes[0]->nodes[0]);
-        if(!strcmp(left,"INT*"))
-            return "INT";
-		else if(!strcmp(left,"CHAR*"))
-            return "CHAR";
-		else if(!strcmp(left,"DOUBLE*"))
-            return "DOUBLE";
-		else if(!strcmp(left,"FLOAT*"))
-            return "FLOAT";
-		else{
+		char* base_type = getPointerBaseType(left);
+        if(!strcmp(left, "NULL")){
 			printf("Error: Line %d: '%s' is not pointer\n", exp->nodes[0]->nodes[0]->line ,left);
 			exit(1);
 		}
+		return base_type;
 	}
 
 	else if (!strcmp(exp->token,"LEN")){
@@ -689,6 +668,30 @@ int isCompatibleForComparison(char* left, char* right) {
            (!strcmp(left, right) && !strcmp(right, "FLOAT")) ||
            (!strcmp(left, right) && !strcmp(right, "DOUBLE"));
 }
+
+int isEqualType(char* left, char* right) {
+    if (!strcmp(left, right)) {
+        if (!strcmp(left, "BOOL") || !strcmp(left, "CHAR") ||
+            !strcmp(left, "INT") || !strcmp(left, "DOUBLE") ||
+            !strcmp(left, "FLOAT")) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+char* getPointerBaseType(char* type) {
+    if (!strcmp(type, "INT*"))
+        return "INT";
+    if (!strcmp(type, "CHAR*"))
+        return "CHAR";
+    if (!strcmp(type, "DOUBLE*"))
+        return "DOUBLE";
+    if (!strcmp(type, "FLOAT*"))
+        return "FLOAT";
+    return "NULL";
+}
+
 /**
  * checkFuncReturn - Checks the return type of a function.
  * This function validates the return type of a function by comparing the function's declared return type

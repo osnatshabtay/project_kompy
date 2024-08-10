@@ -34,4 +34,5 @@ public void main(): static{
     z<-y;
     d<-1.1+2;
     b<-d<3.3;
+    b<-y==z;
 }
