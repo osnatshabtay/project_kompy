@@ -2,8 +2,6 @@
 #define SEMANTIC_ANALYSIS_H
 
 // TODO - chage param order
-// TODO - change all varNames to var_names
-// TODO - pretiffy order of function declaration
 // TODO change all strings (for example - "ARGS_NONE")
 
 typedef struct node {
@@ -12,7 +10,7 @@ typedef struct node {
 	struct node** nodes; // TODO cahnge names (prob sons)
 	int count; // TODO change name (prob num_of_sons)
 	char* node_type;
-	int line; // TODO change to line_num
+	int line_number;
 } node;
 
 typedef struct symbolNode {
