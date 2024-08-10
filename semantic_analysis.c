@@ -145,15 +145,6 @@ void freeNode(node* node_to_free, int free_sons){
 	free(node_to_free);
 }
 
-void semanticAnalysis(node* root) {
-	pushStatementToStack(root, 0);
-	checkForSymbolsDuplications(SCOPE_STACK_TOP);
-	findCalledFunctions(root);
-	checkMainNonStaticCalls(root);
-	checkStaticNonStaticCallsViolation();
-	printTree (root,0);
-}
-
 void pushStatementToStack(node* root, int scope_level){
 	if (root == NULL)
 		return;

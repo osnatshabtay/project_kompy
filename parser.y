@@ -28,7 +28,14 @@ int yyerror(char *s);
 
 %%
 s:
-    code { semanticAnalysis($1); }
+    code {
+        pushStatementToStack($1, 0);
+        checkForSymbolsDuplications(SCOPE_STACK_TOP);
+        findCalledFunctions($1);
+        checkMainNonStaticCalls($1);
+        checkStaticNonStaticCallsViolation();
+        printTree ($1,0);
+        }
     ;
 
 code:

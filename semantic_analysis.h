@@ -38,7 +38,6 @@ void freeNode(node* node_to_free, int free_sons);
 symbolNode* symbolSearch (symbolNode* symbol_table, char* id);
 symbolNode* scopeSearch(char* id);
 
-void semanticAnalysis(node* root);
 void pushStatementToStack(node* root, int scope_level);
 void pushScopeToScopeStack(scopeNode** scope_stack_top, node* params, node** statments, int scope_level, int stat_size);
 void pushStatementsToScope(node** statements, int size);
