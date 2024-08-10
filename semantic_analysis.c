@@ -283,15 +283,15 @@ void pushStatementsToScope(node** statements, int num_of_statements){
 		}
 
 		else if (!strcmp(statements[i]->token, "FUNCTION")){
-			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, 1, 0, statements[i]->sons_nodes[1]);
+			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[1], statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, 1, 0);
 		}
 
 		else if (!strcmp(statements[i]->token, "STATIC-FN")) {
-			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, 1, 1, statements[i]->sons_nodes[1]);
+			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->sons_nodes[1], statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[2]->token, 1, 1);
 		}
 
 		else if (!strcmp(statements[i]->token, "FUNC_CALL")){
-			checkFunctionCall(statements[i]->sons_nodes[0]->token, statements[i]->sons_nodes[1]);
+			checkFunctionCall(statements[i]->sons_nodes[1], statements[i]->sons_nodes[0]->token);
 		}
 
 		else if(!strcmp(statements[i]->token, "<-")){
@@ -342,7 +342,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 					exit(1);
 				}
 				else
-					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0);
 			
 			else if ((!strcmp(vars_declared[j]->token, "<-") && strcmp(var_type, "STRING") == 0)){
 				char* exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]);
@@ -353,7 +353,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 				else {
 					exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[1]);
 					if (!strcmp(var_type, exp_type))
-						addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0, NULL);
+						addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0);
 					else{
 						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type, var_type);
 						exit(1);
@@ -368,16 +368,16 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 					exit(1);
 				}
 				else
-					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->token, var_type, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->token, var_type, 0, 0);
 			}
 			
 			else{
 				if (strcmp(vars_declared[j]->token, "<-"))
-					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->token, var_type, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->token, var_type, 0, 0);
 				else{
 					char* exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[1]);
 					if (!strcmp(var_type, exp_type))
-						addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0, NULL);
+						addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0);
 					else {
 						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->sons_nodes[0]->line_number, exp_type, var_type);
 						exit(1);
@@ -388,7 +388,7 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 	}
 }
 
-void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, int is_func, int is_static, node* params) {
+void addSymbolToSymbolTable(scopeNode** scope_stack_top, node* params, char* symbol_id, char* symbol_type, int is_func, int is_static) {
 	symbolNode* new_node = (symbolNode*) malloc(sizeof(symbolNode));
 	new_node->next =(*scope_stack_top)->symbol_table;
 	(*scope_stack_top)->symbol_table = new_node;
@@ -542,7 +542,7 @@ char* checkExpAndReturnItsType(node* exp){
 	}
 
 	else if (!strcmp(exp->token, "FUNC_CALL")){
-		if(checkFunctionCall(exp->sons_nodes[0]->token, exp->sons_nodes[1])){
+		if(checkFunctionCall(exp->sons_nodes[1], exp->sons_nodes[0]->token)){
 			symbolNode* func_symbol = scopeSearch(exp->sons_nodes[0]->token);
 			return func_symbol->type;
 		}
@@ -592,7 +592,7 @@ char* checkExpAndReturnItsType(node* exp){
 		if (!strcmp(left_exp, "NULL") || !strcmp(right_exp, "NULL"))
 			return "NULL";
         if (isArithmeticType(left_exp) && isArithmeticType(right_exp)) {
-            return getArithmeticResultType(left_exp, right_exp, exp);
+            return getArithmeticResultType(exp, left_exp, right_exp);
         }
 		else{
 			printf("Error: Line %d: Cannot perform '%s' operation between '%s' and '%s' - [%s %s %s]\n", exp->line_number, exp->token, left_exp, right_exp ,exp->sons_nodes[0]->token, exp->token, exp->sons_nodes[1]->token);
@@ -609,7 +609,7 @@ int isArithmeticType(char* type) {
     return !strcmp(type, "INT") || !strcmp(type, "FLOAT") || !strcmp(type, "DOUBLE");
 }
 
-char* getArithmeticResultType(char* left, char* right, node* exp) {
+char* getArithmeticResultType(node* exp, char* left, char* right) {
     if (!strcmp(left, "INT") && !strcmp(right, "INT"))
         return "INT";
     else if (!strcmp(left, "FLOAT") && !strcmp(right, "FLOAT"))
@@ -726,7 +726,7 @@ void checkForSymbolsDuplications(scopeNode* scope){
 	}
 }
 
-int checkFunctionCall(char* func_name, node* func_args){
+int checkFunctionCall(node* func_args, char* func_name){
     symbolNode *func_symbol = scopeSearch(func_name);
 	if (func_symbol != NULL)
 		if (checkFunctionArgs(func_symbol->params, func_args))

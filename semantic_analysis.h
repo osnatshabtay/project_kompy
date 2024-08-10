@@ -45,7 +45,7 @@ void pushStatementToStack(node* root, int scope_level);
 void pushScopeToScopeStack(scopeNode** scope_stack_top, node* params, node** statments, int scope_level, int stat_size);
 void pushStatementsToScope(node** statements, int size);
 void pushSymbolsToSymbolTable(node* var_declaration_nosde);
-void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, int is_func, int is_static, node* params);
+void addSymbolToSymbolTable(scopeNode** scope_stack_top, node* params, char* symbol_id, char* symbol_type, int is_func, int is_static);
 void isValidPrtAssinment(node* ptr_node);
 void checkForSymbolsDuplications(scopeNode* scope);
 void checkStaticNonStaticCallsViolation();
@@ -57,13 +57,13 @@ int isVarDeclared(char* var_name);
 int checkFunctionArgs(node* func_params, node* func_args);
 int isValidReturnType(node *func_node);
 int isValidReturnStatement(node* func_node, char* expected_ret_type);
-int checkFunctionCall(char* func_name, node* func_args);
+int checkFunctionCall(node* func_args, char* func_name);
 int isArithmeticType(char* type);
 int isCompatibleForComparison(char* left, char* right);
 int isEqualType(char* left, char* right);
 
 char* getPointerBaseType(char* type);
-char* getArithmeticResultType(char* left, char* right, node* exp);
+char* getArithmeticResultType(node* exp, char* left, char* right);
 char* checkExpAndReturnItsType(node* exp);
 
 #endif 
