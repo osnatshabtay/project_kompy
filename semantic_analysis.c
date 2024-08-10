@@ -1,6 +1,6 @@
 #include "semantic_analysis.h"
 
-scopeNode* SCOPE_STACK_TOP = NULL;
+scope* SCOPE_STACK_TOP = NULL;
 int NUM_OF_MAIN_FUNCTIONS = 0;
 char* CURR_FUNCTION = NULL;
 char* CALLED_FUNCTIONS[256];
@@ -252,8 +252,8 @@ void pushStatementToStack(node* root, int scope_level){
 	}
 }
 
-void pushScopeToScopeStack(scopeNode** scope_stack_top, node* scope_params, node** statements, int scope_level, int num_of_statements){      
-	scopeNode* new_scope = (scopeNode*) malloc(sizeof(scopeNode));
+void pushScopeToScopeStack(scope** scope_stack_top, node* scope_params, node** statements, int scope_level, int num_of_statements){      
+	scope* new_scope = (scope*) malloc(sizeof(scope));
 	new_scope->scope_level = scope_level-1;
 	new_scope->next = (*scope_stack_top);
 	(*scope_stack_top) = new_scope;
@@ -371,8 +371,8 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 	}
 }
 
-void addSymbolToSymbolTable(scopeNode** scope_stack_top, node* params, char* symbol_id, char* symbol_type, int is_func, int is_static) {
-	symbolNode* new_node = (symbolNode*) malloc(sizeof(symbolNode));
+void addSymbolToSymbolTable(scope** scope_stack_top, node* params, char* symbol_id, char* symbol_type, int is_func, int is_static) {
+	symbol* new_node = (symbol*) malloc(sizeof(symbol));
 	new_node->next =(*scope_stack_top)->symbol_table;
 	(*scope_stack_top)->symbol_table = new_node;
 
@@ -394,12 +394,12 @@ void addSymbolToSymbolTable(scopeNode** scope_stack_top, node* params, char* sym
 }
 
 int isVarDeclared(char* var_name){
-	symbolNode* symbol = scopeSearch(var_name);
-	return (symbol == NULL) ? 0 : 1;
+	symbol* symbol_node = scopeSearch(var_name);
+	return (symbol_node == NULL) ? 0 : 1;
 }
 
-symbolNode* symbolSearch (symbolNode* symbol_table, char* id){
-	symbolNode* curr_symbol_table;
+symbol* symbolSearch (symbol* symbol_table, char* id){
+	symbol* curr_symbol_table;
 	for(curr_symbol_table = symbol_table; curr_symbol_table != NULL; curr_symbol_table = curr_symbol_table->next){
 		if (!strcmp(curr_symbol_table->id, id)){
             return curr_symbol_table;
@@ -408,12 +408,12 @@ symbolNode* symbolSearch (symbolNode* symbol_table, char* id){
 	return NULL;
 }
 
-symbolNode* scopeSearch(char* id) {
-    scopeNode* curr_scope = SCOPE_STACK_TOP;
+symbol* scopeSearch(char* id) {
+    scope* curr_scope = SCOPE_STACK_TOP;
 	int curr_level;
 
     while (curr_scope != NULL) {
-        symbolNode* found_symbol = symbolSearch(curr_scope->symbol_table, id);
+        symbol* found_symbol = symbolSearch(curr_scope->symbol_table, id);
         if (found_symbol != NULL) {
             return found_symbol;  
         }
@@ -438,7 +438,7 @@ char* checkExpAndReturnItsType(node* exp){
 		return "NULL";
 
 	else if (exp->node_type != NULL && !strcmp(exp->node_type, "ID")){
-		symbolNode* symbol_node = scopeSearch(exp->token);
+		symbol* symbol_node = scopeSearch(exp->token);
 		if(symbol_node != NULL){
 			if(!strcmp(symbol_node->type, "STRING") && exp->sons_count > 0){
 				char* indexType = checkExpAndReturnItsType(exp->sons_nodes[0]->sons_nodes[0]);
@@ -526,7 +526,7 @@ char* checkExpAndReturnItsType(node* exp){
 
 	else if (!strcmp(exp->token, "FUNCTION_CALL")){
 		if(checkFunctionCall(exp->sons_nodes[1], exp->sons_nodes[0]->token)){
-			symbolNode* func_symbol = scopeSearch(exp->sons_nodes[0]->token);
+			symbol* func_symbol = scopeSearch(exp->sons_nodes[0]->token);
 			return func_symbol->type;
 		}
 	}
@@ -687,12 +687,12 @@ void isValidPrtAssinment(node* ptr_node){
 	}
 }
 
-void checkForSymbolsDuplications(scopeNode* scope){
-	scopeNode* curr_scope;
-	symbolNode* s1;
-	symbolNode* s2;
-	for(curr_scope = scope; curr_scope != NULL; curr_scope = curr_scope->next){
-		for(s1 = scope->symbol_table; s1 != NULL; s1 = s1->next){
+void checkForSymbolsDuplications(scope* scope_node){
+	scope* curr_scope;
+	symbol* s1;
+	symbol* s2;
+	for(curr_scope = scope_node; curr_scope != NULL; curr_scope = curr_scope->next){
+		for(s1 = scope_node->symbol_table; s1 != NULL; s1 = s1->next){
 			for(s2 = s1->next; s2 != NULL; s2 = s2->next){
 				if (!strcmp(s1->id, s2->id)){
 					if (s1->is_func){
@@ -710,7 +710,7 @@ void checkForSymbolsDuplications(scopeNode* scope){
 }
 
 int checkFunctionCall(node* func_args, char* func_name){
-    symbolNode *func_symbol = scopeSearch(func_name);
+    symbol *func_symbol = scopeSearch(func_name);
 	if (func_symbol != NULL)
 		if (checkFunctionArgs(func_symbol->params, func_args))
 			return 1;
@@ -721,10 +721,10 @@ int checkFunctionCall(node* func_args, char* func_name){
 void checkStaticNonStaticCallsViolation() {
     int i = 0, j = 0;
     for (j = 0; j < HAS_CALLED_FUNCTIONS_INDEX; j++) {
-        symbolNode* called_func_symbol = scopeSearch(HAS_CALLED_FUNCTIONS[j]);
+        symbol* called_func_symbol = scopeSearch(HAS_CALLED_FUNCTIONS[j]);
         if (called_func_symbol != NULL) {
             for (i = 0; i < CALLED_FUNCTIONS_INDEX; i++) {
-                symbolNode* symbol_of_calling_func = scopeSearch(CALLED_FUNCTIONS[i]);
+                symbol* symbol_of_calling_func = scopeSearch(CALLED_FUNCTIONS[i]);
 
                 if (symbol_of_calling_func != NULL) {
                     if (symbol_of_calling_func->is_static && !called_func_symbol->is_static) {
@@ -752,7 +752,7 @@ void checkMainNonStaticCalls(node* tree) {
 
     if (strcmp(token, "FUNCTION_CALL") == 0) {
         if (inMain) {
-            symbolNode* called_func_symbol = scopeSearch(tree->sons_nodes[0]->token);
+            symbol* called_func_symbol = scopeSearch(tree->sons_nodes[0]->token);
             if (called_func_symbol != NULL && !called_func_symbol->is_static) {
                 printf("Error Static function cannot call non-static function .\n");
                 exit(1);

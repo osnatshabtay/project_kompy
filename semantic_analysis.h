@@ -11,20 +11,20 @@ typedef struct node {
 	int line_number;
 } node;
 
-typedef struct symbolNode {
+typedef struct symbol {
     int is_func;
     int is_static;
     char* id;
     char* type;
     node* params;
-    struct symbolNode* next;
-} symbolNode;
+    struct symbol* next;
+} symbol;
 
-typedef struct scopeNode{
+typedef struct scope{
 	int scope_level;
-	symbolNode *symbol_table;
-	struct scopeNode *next;
-} scopeNode;
+	symbol *symbol_table;
+	struct scope *next;
+} scope;
 
 node* makeNode(char* token);
 node* combineNodes(char* token, node* first_node, node* second_node);
@@ -35,16 +35,16 @@ void addNodesList(node* add_to, node* to_add);
 void printTree(node* curr_node, int num_of_spaces);
 void freeNode(node* node_to_free, int free_sons);
 
-symbolNode* symbolSearch (symbolNode* symbol_table, char* id);
-symbolNode* scopeSearch(char* id);
+symbol* symbolSearch (symbol* symbol_table, char* id);
+symbol* scopeSearch(char* id);
 
 void pushStatementToStack(node* root, int scope_level);
-void pushScopeToScopeStack(scopeNode** scope_stack_top, node* params, node** statments, int scope_level, int stat_size);
+void pushScopeToScopeStack(scope** scope_stack_top, node* params, node** statments, int scope_level, int stat_size);
 void pushStatementsToScope(node** statements, int size);
 void pushSymbolsToSymbolTable(node* var_declaration_nosde);
-void addSymbolToSymbolTable(scopeNode** scope_stack_top, node* params, char* symbol_id, char* symbol_type, int is_func, int is_static);
+void addSymbolToSymbolTable(scope** scope_stack_top, node* params, char* symbol_id, char* symbol_type, int is_func, int is_static);
 void isValidPrtAssinment(node* ptr_node);
-void checkForSymbolsDuplications(scopeNode* scope);
+void checkForSymbolsDuplications(scope* scope_node);
 void checkStaticNonStaticCallsViolation();
 void checkMainNonStaticCalls(node* tree);
 void checkStringAssignment(node* str_node, char* assigned_val_type);
