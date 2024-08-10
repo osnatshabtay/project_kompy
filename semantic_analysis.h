@@ -52,7 +52,7 @@ void pushScopeStatements(node** statements, int size);
 void pushSymbols(node* var_declaration_nosde);
 void addSymbolToSymbolTable(scopeNode** scope_stack_top, char* symbol_id, char* symbol_type, char* data, int is_func, int is_static, node* params);
 int isDeclared(char* id);
-symbolNode* symbolSearch (symbolNode* symTable, char* id);
+symbolNode* symbolSearch (symbolNode* symbol_table, char* id);
 symbolNode* scopeSearch(char* id);
 char* evaluateExpression(node* exp);
 int checkFuncReturn(node *funcNode);

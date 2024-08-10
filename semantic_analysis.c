@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 /* Global variables */
-scopeNode* topStack = NULL;
+scopeNode* SCOPE_STACK_TOP = NULL;
 int mainCounter = 0;
 char* currentFunction = NULL;
 char* func_called[256];
@@ -158,7 +158,7 @@ void freeNode(node* node_to_free, int free_sons){
  */
 void semanticAnalysis(node* root) {
 	pushStatementToStack(root, 0);
-	isSymbolExist(topStack);
+	isSymbolExist(SCOPE_STACK_TOP);
 	findFunctionsCalled(root);
 	checkMainNonStaticCalls(root);
 	checkStaticNonStaticCalls();
@@ -173,12 +173,12 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'F': // FUNCTION or FOR
 			if (!strcmp(root->token, "FUNCTION")) {
 				scope_level++;
-				pushScopeToScopeStack(&topStack, root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
 				checkFuncReturn(root);
 			}
 			else if (!strcmp(root->token, "FOR")) {
 				scope_level++;
-				pushScopeToScopeStack(&topStack, NULL, root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
 				char* initType = evaluateExpression(root->nodes[0]);
 				if(strcmp("INT" ,initType)){
 					printf("Error: Line %d: FOR initialization requires an 'INT' type.\n", root->nodes[0]->line);
@@ -200,7 +200,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'S': // STATIC-FN
 			if (!strcmp(root->token, "STATIC-FN")) {
 				scope_level++;
-				pushScopeToScopeStack(&topStack, root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, root->nodes[1], root->nodes[3]->nodes, scope_level, root->nodes[3]->count);
 				checkFuncReturn(root);
 			}
 			break;
@@ -208,7 +208,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'W': // WHILE
 			if (!strcmp(root->token, "WHILE")) {
 				scope_level++;
-				pushScopeToScopeStack(&topStack, NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
 				char* exp_type = evaluateExpression(root->nodes[0]);
 				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid WHILE condition. Expected return type 'BOOL'.\n", root->line);
@@ -220,7 +220,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'D': // DO-WHILE
 			if (!strcmp(root->token, "DO-WHILE")) {
 				scope_level++;
-				pushScopeToScopeStack(&topStack, NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
 				char* exp_type = evaluateExpression(root->nodes[1]);
 				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid DO-WHILE condition. Expected return type 'BOOL'.\n", root->line);
@@ -232,7 +232,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'C': // CODE
 			if (!strcmp(root->token, "CODE")) {
 				scope_level++;
-        		pushScopeToScopeStack(&topStack, NULL, root->nodes, scope_level, root->count);
+        		pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->nodes, scope_level, root->count);
 			}
 			break;
 
@@ -240,14 +240,14 @@ void pushStatementToStack(node* root, int scope_level){
 			if (!strcmp(root->token, "MAIN")) {
 				scope_level++;
 				mainCounter++;
-				pushScopeToScopeStack(&topStack, NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->nodes[0]->nodes, scope_level, root->nodes[0]->count);
 			}
 			break;
 
 		case 'I': // IF
 			if (!strcmp(root->token, "IF")) {
 				scope_level++;
-				pushScopeToScopeStack(&topStack, NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->nodes[1]->nodes, scope_level, root->nodes[1]->count);
 				char* exp_type = evaluateExpression(root->nodes[0]);
 				if(strcmp("BOOL" ,exp_type)){
 					printf("Error: Line %d: Invalid IF condition. Expected return type 'BOOL'.\n",root->line);
@@ -259,7 +259,7 @@ void pushStatementToStack(node* root, int scope_level){
 		case 'B': // BLOCK
 			if (!strcmp(root->token, "BLOCK")) {
 				scope_level++;
-				pushScopeToScopeStack(&topStack, NULL, root->nodes, scope_level, root->count);
+				pushScopeToScopeStack(&SCOPE_STACK_TOP, NULL, root->nodes, scope_level, root->count);
 			}
 			break;
 
@@ -304,11 +304,11 @@ void pushScopeStatements(node** statements, int size){
 		}
 
 		else if (!strcmp(statements[i]->token, "FUNCTION")){
-			addSymbolToSymbolTable(&topStack, statements[i]->nodes[0]->token, statements[i]->nodes[2]->token, NULL, 1, 0, statements[i]->nodes[1]);
+			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->nodes[0]->token, statements[i]->nodes[2]->token, NULL, 1, 0, statements[i]->nodes[1]);
 		}
 
 		else if (!strcmp(statements[i]->token, "STATIC-FN")) {
-			addSymbolToSymbolTable(&topStack, statements[i]->nodes[0]->token, statements[i]->nodes[2]->token, NULL, 1, 1, statements[i]->nodes[1]);
+			addSymbolToSymbolTable(&SCOPE_STACK_TOP, statements[i]->nodes[0]->token, statements[i]->nodes[2]->token, NULL, 1, 1, statements[i]->nodes[1]);
 		}
 
 		else if (!strcmp(statements[i]->token, "FUNC_CALL")){
@@ -361,7 +361,7 @@ void pushSymbols(node* var_declaration_nosde){
 					exit(1);
 				}
 				else
-					addSymbolToSymbolTable(&topStack, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, 0, NULL);
 			
 			else if ((!strcmp(vars_declared[j]->token, "<-") && strcmp(var_type, "STRING") == 0)){
 				char* exp_type = evaluateExpression(vars_declared[j]->nodes[0]->nodes[0]->nodes[0]);
@@ -372,7 +372,7 @@ void pushSymbols(node* var_declaration_nosde){
 				else {
 					exp_type = evaluateExpression(vars_declared[j]->nodes[1]);
 					if (!strcmp(var_type, exp_type))
-						addSymbolToSymbolTable(&topStack, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, 0, NULL);
+						addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, 0, NULL);
 					else{
 						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->nodes[0]->line, exp_type, var_type);
 						exit(1);
@@ -387,16 +387,16 @@ void pushSymbols(node* var_declaration_nosde){
 					exit(1);
 				}
 				else
-					addSymbolToSymbolTable(&topStack, vars_declared[j]->token, var_type, NULL, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->token, var_type, NULL, 0, 0, NULL);
 			}
 			
 			else{
 				if (strcmp(vars_declared[j]->token, "<-"))
-					addSymbolToSymbolTable(&topStack, vars_declared[j]->token, var_type, NULL, 0, 0, NULL);
+					addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->token, var_type, NULL, 0, 0, NULL);
 				else{
 					char* exp_type = evaluateExpression(vars_declared[j]->nodes[1]);
 					if (!strcmp(var_type, exp_type))
-						addSymbolToSymbolTable(&topStack, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, 0, NULL);
+						addSymbolToSymbolTable(&SCOPE_STACK_TOP, vars_declared[j]->nodes[0]->token, var_type, vars_declared[j]->nodes[1]->token, 0, 0, NULL);
 					else {
 						printf("Error: Line %d: Assignment type mismatch: can not assign %s to %s\n", vars_declared[j]->nodes[0]->line, exp_type, var_type);
 						exit(1);
@@ -448,45 +448,39 @@ int isDeclared(char* id){
 	return 0;
 }
 
-/**
- * symbolSearch - Searches for a symbol with the given ID in the specified symbol table.
- * @param symTable: The symbol table to search within.
- * @param id: The identifier of the symbol to search for.
- * @return: Returns a pointer to the symbolNode if the symbol is found, NULL otherwise.
- */
-symbolNode* symbolSearch (symbolNode* symTable, char* id){
-    symbolNode* current = symTable;
-    while (current != NULL)
-    {
-        if (!strcmp(current->id, id)){
-            return current;
+symbolNode* symbolSearch (symbolNode* symbol_table, char* id){
+	symbolNode* curr_symbol_table;
+	for(curr_symbol_table = symbol_table; curr_symbol_table != NULL; curr_symbol_table = curr_symbol_table->next){
+		if (!strcmp(curr_symbol_table->id, id)){
+            return curr_symbol_table;
         }
-        current = current->next;
-    }
-    return NULL;
-}
-
-/**
- * scopeSearch - Searches for a symbol with the given ID in the current scope and all parent scopes.
- * @param id: The identifier of the symbol to search for.
- * @return: Returns a pointer to the symbolNode if the symbol is found, NULL otherwise.
- */
-symbolNode* scopeSearch(char* id){
-	scopeNode* current = topStack;
-	symbolNode* res;
-	int currLevel;
-	while (current != NULL){
-		currLevel = current->scopeLevel;
-		res = symbolSearch(current->symbolTable, id);
-		if (res != NULL)
-			return res;
-		if (currLevel == 0)
-			return NULL;
-		
-		while (current->scopeLevel > 0 && current->scopeLevel >= currLevel)
-			current = current->next;
 	}
 	return NULL;
+}
+
+symbolNode* scopeSearch(char* id) {
+    scopeNode* curr_scope = SCOPE_STACK_TOP;
+	int curr_level;
+	
+    while (curr_scope != NULL) {
+        symbolNode* found_symbol = symbolSearch(curr_scope->symbolTable, id);
+        if (found_symbol != NULL) {
+            return found_symbol;  
+        }
+
+		curr_level = curr_scope->scopeLevel;
+        if (curr_level == 0) {
+            break;
+        }
+
+        // skip scopes that are not direct parents by comparing scope levels
+        curr_scope = curr_scope->next;
+        while (curr_scope != NULL && curr_scope->scopeLevel >= curr_level) {
+            curr_scope = curr_scope->next;
+        }
+    }
+
+    return NULL;
 }
 
 /**
@@ -964,16 +958,16 @@ void findFunctionsCalled(node* tree) {
  */
 void printSymbolTable(scopeNode *node)
 {  
-   scopeNode *currentScope = node;
+   scopeNode *curr_scope = node;
    symbolNode *currentSymbol;
-   while(currentScope != NULL){
-		currentSymbol = currentScope->symbolTable;
+   while(curr_scope != NULL){
+		currentSymbol = curr_scope->symbolTable;
 		while (currentSymbol != NULL) {
 			printf("ID: %s\t|\tVariable Type: %s\t|\tValue: %s\t|\tLocated In Scope: %d", currentSymbol->id, currentSymbol->type, currentSymbol->data,currentSymbol->scopeID);
 			printf("\n");
 			currentSymbol = currentSymbol->next;
 		}
-	currentScope=currentScope->next;       
+	curr_scope=curr_scope->next;       
 	}
 }
 
