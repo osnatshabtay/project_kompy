@@ -158,7 +158,7 @@ void freeNode(node* node_to_free, int free_sons){
  */
 void semanticAnalysis(node* root) {
 	pushStatementToStack(root, 0);
-	isSymbolExist(SCOPE_STACK_TOP);
+	checkForSymbolsDuplications(SCOPE_STACK_TOP);
 	findFunctionsCalled(root);
 	checkMainNonStaticCalls(root);
 	checkStaticNonStaticCalls();
@@ -734,47 +734,26 @@ void isValidPrtAssinment(node* ptr_node){
 	}
 }
 
-/**
- * isSymbolExist - Checks for duplicate symbols in a scope and its ancestors.
- * This function iterates through all symbols in the current scope and its parent scopes to detect and report
- * any duplicate symbol declarations, including functions and variables. It helps maintain the uniqueness of
- * identifiers within a scope.
- * @param scope: The current scope in the symbol table hierarchy.
- */
-void isSymbolExist(scopeNode* scope){
-    scopeNode * current = scope;
-    while(current != NULL){
-        checkSymbols(current);
-        current=current->next;
-    }
-}
-
-/**
- * checkSymbols - Checks for duplicate symbols within a single scope.
- * This function iterates through the symbol table of a given scope and checks for duplicate identifiers.
- * It distinguishes between functions and variables, reporting re-declarations of either.
- * @param scope: The scope node containing the symbol table to check.
- */
-void checkSymbols(scopeNode* scope){
-    symbolNode* s1 = scope->symbolTable;
+void checkForSymbolsDuplications(scopeNode* scope){
+	scopeNode* curr_scope;
+	symbolNode* s1;
 	symbolNode* s2;
- 	while(s1!= NULL){
-        s2 = s1->next;
-        while (s2 != NULL){
-            if (!strcmp(s1->id, s2->id)){
-                if (s1->is_func){
-                    printf ("Re-declaration of function (%s)\n", s1->id);
-					exit(1);
+	for(curr_scope = scope; curr_scope != NULL; curr_scope = curr_scope->next){
+		for(s1 = scope->symbolTable; s1 != NULL; s1 = s1->next){
+			for(s2 = s1->next; s2 != NULL; s2 = s2->next){
+				if (!strcmp(s1->id, s2->id)){
+					if (s1->is_func){
+						printf ("Re-declaration of function (%s)\n", s1->id);
+						exit(1);
+					}
+					else{
+						printf ("Re-declaration of variable (%s)\n", s1->id);
+						exit(1);
+					}
 				}
-                else{
-                    printf ("Re-declaration of variable (%s)\n", s1->id);
-					exit(1);
-				}
-        	}
-            s2 =s2->next;
-        }
-        s1 =s1->next;
-    }
+			}
+		}
+	}
 }
 
 int checkFunctionCall(char* func_name, node* func_args){
