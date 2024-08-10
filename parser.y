@@ -115,11 +115,11 @@ statment:
     ;
 
 if_statment:
-    IF '(' expression ')' statment {$$ = makeNode("s"); node* s = makeNode("IF"); s->line_number = $3->line_number; addSonNodeToFatherNode(&s, $3);  addNodesList(s,$5); s->nodes[1]->father = "IF"; addSonNodeToFatherNode(&$$,s);}  %prec PREC_IF
+    IF '(' expression ')' statment {$$ = makeNode("s"); node* s = makeNode("IF"); s->line_number = $3->line_number; addSonNodeToFatherNode(&s, $3);  addNodesList(s,$5); s->sons_nodes[1]->father = "IF"; addSonNodeToFatherNode(&$$,s);}  %prec PREC_IF
     ;
 
 if_else_statment:
-    IF '(' expression ')' statment ELSE statment {$$ = makeNode("s"); node* s = makeNode("IF-ELSE"); s->line_number = $3->line_number; addSonNodeToFatherNode(&s, $3); addNodesList(s,$5); s->nodes[1]->father = "IF"; addNodesList(s, $7); addSonNodeToFatherNode(&$$,s);}
+    IF '(' expression ')' statment ELSE statment {$$ = makeNode("s"); node* s = makeNode("IF-ELSE"); s->line_number = $3->line_number; addSonNodeToFatherNode(&s, $3); addNodesList(s,$5); s->sons_nodes[1]->father = "IF"; addNodesList(s, $7); addSonNodeToFatherNode(&$$,s);}
     ;
 
 loop: 

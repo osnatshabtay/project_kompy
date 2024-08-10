@@ -7,7 +7,7 @@
 typedef struct node {
 	char* token;
 	char* father;
-	struct node** nodes; // TODO cahnge names (prob sons)
+	struct node** sons_nodes;
 	int count; // TODO change name (prob num_of_sons)
 	char* node_type;
 	int line_number;
