@@ -71,7 +71,7 @@ var_type:
 
 function_void: 
     visibility VOID id '(' args ')' void_block 
-    {$$ = makeNode(""); 
+    {$$ = makeNode("s"); 
     node* function = makeNode ("FUNCTION"); 
     function->line_number = $3->line_number; 
     addSonNodeToFatherNode(&function,$3); 
@@ -82,7 +82,7 @@ function_void:
     }
 
     |visibility VOID id '(' args ')' ':' STATIC void_block 
-    {$$ = makeNode(""); 
+    {$$ = makeNode("s"); 
     node* function = makeNode ("STATIC"); 
     function->line_number = $3->line_number; 
     addSonNodeToFatherNode(&function,$3); 
@@ -93,7 +93,7 @@ function_void:
     }
 
     |visibility VOID id '(' ARGS args ')' void_block 
-    {$$ = makeNode(""); 
+    {$$ = makeNode("s"); 
     node* function = makeNode ("FUNCTION"); 
     function->line_number = $3->line_number; 
     addSonNodeToFatherNode(&function,$3); 
@@ -103,7 +103,7 @@ function_void:
     addSonNodeToFatherNode(&$$,function);
     }
     |visibility VOID id '(' ARGS args ')' ':' STATIC void_block 
-    {$$ = makeNode(""); 
+    {$$ = makeNode("s"); 
     node* function = makeNode ("STATIC"); 
     function->line_number = $3->line_number; 
     addSonNodeToFatherNode(&function,$3); 
@@ -116,7 +116,7 @@ function_void:
 
 function: 
     visibility func_type id '(' args ')' function_block 
-    {$$ = makeNode(""); 
+    {$$ = makeNode("s"); 
     node* function = makeNode ("FUNCTION"); 
     function->line_number = $3->line_number; 
     addSonNodeToFatherNode(&function,$3); 
@@ -126,7 +126,7 @@ function:
     addSonNodeToFatherNode(&$$,function);
     }
     |visibility func_type id '(' args ')' ':' STATIC function_block 
-    {$$ = makeNode(""); 
+    {$$ = makeNode("s"); 
     node* function = makeNode ("STATIC"); 
     function->line_number = $3->line_number; 
     addSonNodeToFatherNode(&function,$3); 
@@ -136,7 +136,7 @@ function:
     addSonNodeToFatherNode(&$$,function);
     }
     |visibility func_type id '(' ARGS args ')' function_block 
-    {$$ = makeNode(""); 
+    {$$ = makeNode("s"); 
     node* function = makeNode ("FUNCTION"); 
     function->line_number = $3->line_number; 
     addSonNodeToFatherNode(&function,$3); 
@@ -146,7 +146,7 @@ function:
     addSonNodeToFatherNode(&$$,function);
     }
     |visibility func_type id '(' ARGS args ')' ':' STATIC function_block 
-    {$$ = makeNode(""); 
+    {$$ = makeNode("s"); 
     node* function = makeNode ("STATIC"); 
     function->line_number = $3->line_number; 
     addSonNodeToFatherNode(&function,$3); 
@@ -304,18 +304,18 @@ statment:
     |func_call ';'
     |RETURN expression ';' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ret = makeNode("RETURN"); 
         addSonNodeToFatherNode(&ret, $2); 
         addSonNodeToFatherNode(&$$, ret);
     }
-    |RETURN ';' {$$ = makeNode(""); node* ret = makeNode("RETURN"); addSonNodeToFatherNode(&$$, ret);}
+    |RETURN ';' {$$ = makeNode("s"); node* ret = makeNode("RETURN"); addSonNodeToFatherNode(&$$, ret);}
     ;
 
 if_statment:
     IF '(' expression ')' statment 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* if_node = makeNode("IF"); 
         if_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&if_node, $3); 
@@ -327,7 +327,7 @@ if_statment:
 if_else_statment:
     IF '(' expression ')' statment ELSE statment 
     {
-        $$ = makeNode(""); node* if_node = makeNode("IF-ELSE"); 
+        $$ = makeNode("s"); node* if_node = makeNode("IF-ELSE"); 
         if_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&if_node, $3); 
         addNodesList(if_node,$5); 
@@ -338,7 +338,7 @@ if_else_statment:
 loop: 
     FOR '(' init_for ';' expression ';' init_for ')' statment 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* for_node = makeNode("FOR"); 
         for_node->line_number = $3->line_number; 
         addSonsNodesToFatherNode(for_node, $3); 
@@ -349,7 +349,7 @@ loop:
     }
     | WHILE '(' expression ')' statment 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* while_node = makeNode("WHILE"); 
         while_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&while_node, $3); 
@@ -358,7 +358,7 @@ loop:
  
     | DO block WHILE '(' expression ')' ';' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* while_node = makeNode("DO-WHILE"); 
         while_node->line_number = $5->line_number; 
         addSonsNodesToFatherNode(while_node, $2); 
@@ -373,7 +373,7 @@ loop:
 init_for:
     id ASSIGN expression 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node = makeNode("<-"); 
         ass_node->line_number = number_line; 
         addSonNodeToFatherNode(&ass_node,$1); 
@@ -382,7 +382,7 @@ init_for:
     }
     | pointer ASSIGN expression 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node = makeNode("<-"); 
         ass_node->line_number = number_line; 
         addSonNodeToFatherNode(&ass_node,$1); 
@@ -394,7 +394,7 @@ init_for:
 ass_string:
     id '[' expression ']' ASSIGN expression 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node = makeNode("<-"); 
         node* index = makeNode("INDEX"); 
         addSonNodeToFatherNode(&index,$3); 
@@ -490,7 +490,7 @@ pointer:
 func_call: 
     id '(' parameter_list ')' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* fun_call = makeNode ("FUNCTION_CALL");  
         node* args = makeNode("ARGS"); 
         addSonNodeToFatherNode(&fun_call,$1); 
@@ -501,7 +501,7 @@ func_call:
     }
     |id ASSIGN id '(' parameter_list ')' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node = makeNode ("<-"); 
         node* args = makeNode("ARGS"); 
         node* fun_call = makeNode("FUNCTION_CALL"); 
@@ -516,7 +516,7 @@ func_call:
     }
     |id '(' ')' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* fun_call = makeNode ("FUNCTION_CALL"); 
         node* args = makeNode("WITHOT ARGS"); 
         addSonNodeToFatherNode(&fun_call,$1); 
@@ -526,7 +526,7 @@ func_call:
     }
     |id ASSIGN id '(' ')' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node = makeNode ("<-"); 
         node* fun_call = makeNode("FUNCTION_CALL"); 
         node* args = makeNode("WITHOT ARGS"); 
@@ -546,21 +546,21 @@ parameter_list:
     ;
 
 parm:
-    expression {$$ = makeNode(""); addSonNodeToFatherNode(&$$,$1);}
+    expression {$$ = makeNode("s"); addSonNodeToFatherNode(&$$,$1);}
     ;
 
 block:
     '{' '}' {$$ =  makeNode("BLOCK");}
     |'{' statments '}' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* block = makeNode("BLOCK"); 
         addNodesList(block,$2); 
         addSonNodeToFatherNode(&$$,block);
     }
     |'{' declerations '}' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* block = makeNode("BLOCK"); 
         addNodesList(makeNode("VAR"),$2); 
         addSonNodeToFatherNode(&block,block); 
@@ -568,7 +568,7 @@ block:
     }
     |'{' declerations statments '}' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* block = makeNode("BLOCK"); 
         node* var_node = makeNode("VAR"); 
         addNodesList(var_node,$2); 
@@ -585,7 +585,7 @@ block:
     }
     |'{' statments RETURN expression ';' '}' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* block = makeNode("BLOCK"); 
         node* ret = makeNode("RETURN"); 
         addNodesList(block,$2);
@@ -595,7 +595,7 @@ block:
     }
     |'{' declerations RETURN expression ';' '}' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* block = makeNode("BLOCK"); 
         node* var_node = makeNode("VAR"); 
         node* ret = makeNode("RETURN"); 
@@ -607,7 +607,7 @@ block:
     }
     |'{' declerations statments RETURN expression ';' '}' 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* block = makeNode("BLOCK"); 
         node* var_node = makeNode("VAR"); 
         node* ret = makeNode("RETURN"); 
@@ -630,11 +630,11 @@ args:
 more_args:
     var_type params 
     {
-        $$ = makeNode(""); node* args_node = $1; addSonsNodesToFatherNode(args_node, $2); addSonNodeToFatherNode(&$$,args_node);
+        $$ = makeNode("s"); node* args_node = $1; addSonsNodesToFatherNode(args_node, $2); addSonNodeToFatherNode(&$$,args_node);
     }
     |var_type ':' params 
     {
-        $$ = makeNode(""); node* args_node = $1; addSonsNodesToFatherNode(args_node, $3); addSonNodeToFatherNode(&$$,args_node);}
+        $$ = makeNode("s"); node* args_node = $1; addSonsNodesToFatherNode(args_node, $3); addSonNodeToFatherNode(&$$,args_node);}
     ;
     
 params:
@@ -644,9 +644,9 @@ params:
 
 
 declerations:
-    declerations var_decleration {$$ = combineNodes("",$1,$2);}
+    declerations var_decleration {$$ = combineNodes("fd",$1,$2);}
     |var_decleration
-    |declerations string_decleration {$$ = combineNodes("",$1,$2);}
+    |declerations string_decleration {$$ = combineNodes("fd",$1,$2);}
     |string_decleration
     ;
 
@@ -655,20 +655,20 @@ var_decleration:
     ;
 
 vars:
-    var_type variables {$$ = makeNode(""); node* var_node = $1; addNodesList(var_node,$2); addSonNodeToFatherNode(&$$,var_node);}
-    |var_type ':' variables {$$ = makeNode(""); node* var_node = $1; addNodesList(var_node,$3); addSonNodeToFatherNode(&$$,var_node);}
+    var_type variables {$$ = makeNode("s"); node* var_node = $1; addNodesList(var_node,$2); addSonNodeToFatherNode(&$$,var_node);}
+    |var_type ':' variables {$$ = makeNode("s"); node* var_node = $1; addNodesList(var_node,$3); addSonNodeToFatherNode(&$$,var_node);}
     ;
 
 string_decleration:
     STRING str_args ';' 
     {
-        $$ = makeNode(""); node* str = makeNode("STRING"); addNodesList(str,$2); addSonNodeToFatherNode(&$$,str);}
+        $$ = makeNode("s"); node* str = makeNode("STRING"); addNodesList(str,$2); addSonNodeToFatherNode(&$$,str);}
     ;
 
 str_args:
     id '[' expression ']' 
     {
-        $$ = makeNode(""); node* size = makeNode("SIZE"); 
+        $$ = makeNode("s"); node* size = makeNode("SIZE"); 
         addSonNodeToFatherNode(&size,$3); 
         addSonNodeToFatherNode(&$1,size); 
         addSonNodeToFatherNode(&$$,$1);
@@ -676,7 +676,7 @@ str_args:
 
     |id '[' expression ']' ',' str_args 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* size = makeNode("SIZE"); 
         addSonNodeToFatherNode(&size,$3); 
         addSonNodeToFatherNode(&$1,size); 
@@ -685,7 +685,7 @@ str_args:
     }
     |id '[' expression ']' ASSIGN expression 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node = makeNode("<-"); 
         node* size = makeNode("SIZE"); 
         addSonNodeToFatherNode(&size,$3); 
@@ -696,7 +696,7 @@ str_args:
     }
     |id '[' expression ']' ASSIGN expression ',' str_args 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node = makeNode("<-"); 
         node* size = makeNode("SIZE"); 
         addSonNodeToFatherNode(&size,$3); 
@@ -713,10 +713,10 @@ str_args:
 
 variables:
     id 
-    |id ',' variables {$$ = makeNode(""); addSonNodeToFatherNode(&$$,$1); addNodesList($$,$3);}
+    |id ',' variables {$$ = makeNode("s"); addSonNodeToFatherNode(&$$,$1); addNodesList($$,$3);}
     |id ASSIGN expression 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node= makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
@@ -724,7 +724,7 @@ variables:
     }
     |id ASSIGN expression ',' variables 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node = makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
@@ -733,7 +733,7 @@ variables:
     }
     |id ASSIGN func_call 
     {
-        $$ = makeNode(""); 
+        $$ = makeNode("s"); 
         node* ass_node= makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addNodesList(ass_node,$3); 
@@ -741,7 +741,7 @@ variables:
     }
     |id ASSIGN func_call ',' variables 
     {
-        $$ = makeNode(""); node* ass_node = makeNode("<-"); 
+        $$ = makeNode("s"); node* ass_node = makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addNodesList(ass_node,$3); 
         addSonNodeToFatherNode(&$$,ass_node); 
