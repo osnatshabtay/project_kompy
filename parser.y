@@ -1,16 +1,14 @@
 %{
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "lex.yy.c"
 #include "semantic.c"
+
 int yylex(void);
 int yyerror(char *s);
 
 %}
 
-%token PUBLIC PRIVATE VOID RETURN MAIN STATIC
-%token INT DOUBLE FLOAT ID INT_LITERAL CHAR BOOL INT_P CHAR_P DOUBLE_P FLOAT_P STRING BOOL_TRUE BOOL_FALSE NULL_P DOUBLE_LITERAL FLOAT_LITERAL CHAR_LITERAL HEX_LITERAL STRING_LITERAL VAR SIZE ARGS
+%token PUBLIC PRIVATE VOID RETURN MAIN STATIC INT DOUBLE FLOAT VAR ARGS
+%token ID INT_LITERAL CHAR BOOL INT_P CHAR_P DOUBLE_P FLOAT_P STRING BOOL_TRUE BOOL_FALSE NULL_P DOUBLE_LITERAL FLOAT_LITERAL CHAR_LITERAL HEX_LITERAL STRING_LITERAL 
 %token IF ELSE WHILE FOR DO
 %token BIGER PLUS ASSIGN ',' DIV AND EQUAL GE LOWER LE MINUS NOT NOTEQUAL OR MULTI ADDRESS LEN
 %token ';' '{' '}' '(' ')' '[' ']' ':' 
@@ -24,7 +22,6 @@ int yyerror(char *s);
 %left MULL MULTI DIV
 %nonassoc PREC_IF
 %nonassoc ELSE
-%start s
 
 %%
 s:
@@ -44,7 +41,7 @@ code:
     ;
 
 Main:
-    PUBLIC VOID MAIN '(' args ')' ':' STATIC void_block {
+    visibility VOID MAIN '(' args ')' ':' STATIC void_block {
         $$ = makeNode("MAIN"); addSonNodeToFatherNode(&$$, $9);}
     ;
 
@@ -767,12 +764,11 @@ id:
 int yyerror(char* s){
     if(NUM_OF_MAIN_FUNCTIONS == 1){
         printf("Error need just one main function.\n");
-        exit(1);
     } else if(NUM_OF_MAIN_FUNCTIONS == 0){
         printf("Error must one main function.\n");
-        exit(1);
     }
     printf("%s: ERROR line %d - '%s'\n", s, number_line, yytext);
+    exit(1);
     return 0;
 }
 
