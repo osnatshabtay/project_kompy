@@ -14,10 +14,11 @@ public int foo_2(){
     var int: a;
     var int: x; 
     a <- 2; 
-    return a+9; }
+    return a+9; 
+    }
 private int foo_3() { 
     var int: x<-5;
-    if (true) 
+    if (2==2) 
     { 
         var int: pp<-foo(8,9, 's');
         var int: w<-9;

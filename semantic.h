@@ -13,6 +13,8 @@ typedef struct node {
 	int sons_count;
 	char* node_type;
 	int line_number;
+	char* var;
+	char* code;
 } node;
 
 typedef struct symbol {
@@ -66,5 +68,34 @@ int checkFunctionCall(node* func_args, char* func_name);
 char* getPointerBaseType(char* type);
 char* getArithmeticResultType(node* exp, char* left, char* right);
 char* checkExpAndReturnItsType(node* exp);
+
+void addVar(node* node, char* var);
+void addCode(node* node, char* code);
+
+
+void freshVar(node* node);
+char* freshLabel();
+void genIF3AC(node* node);
+void genIFELSE3AC(node* node);
+void genWHILE3AC(node* node);
+void genDOWHILE3AC(node* node);
+void genFOR3AC(node* node);
+void genFUNCTIONCALL3AC(node* node_FC, int flag);
+void genFUNCTION3AC(node* node, char* buffer, int flag);
+void genSTRINGAssign3AC(node* node);
+void genSTRINGMemAssign3AC(node* node);
+void genPOINTER3AC(node* node);
+void STRINGAssignSTRING3AC(node* n);
+void genAssignment3AC(node* node);
+void genExperssion3AC(node* node);
+int calculateTotalVarSize(node* args);
+char* extractCondition(const char* input);
+char* trimSpaces(const char* str);
+void print3AC(node* node);
+void genOR3AC(node* tree);
+
+
+
+
 
 #endif 

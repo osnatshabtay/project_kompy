@@ -32,19 +32,28 @@ s:
         checkMainNonStaticCalls($1);
         checkStaticNonStaticCallsViolation();
         printTree ($1,0);
+        addCode($1,"");
+        print3AC($1);
         }
     ;
 
 code:
-    functions Main {$$ = makeNode ("CODE"); addNodesList($$, $1); addSonNodeToFatherNode(&$$, $2);}
-    | Main {$$ = makeNode ("CODE"); addSonNodeToFatherNode(&$$, $1);} 
+    functions Main {
+        $$ = makeNode ("CODE"); 
+        addNodesList($$, $1); 
+        addSonNodeToFatherNode(&$$, $2);}
+    | Main {
+        $$ = makeNode ("CODE"); 
+        addSonNodeToFatherNode(&$$, $1); 
+        addCode($$,"");} 
     ;
 
 Main:
     visibility VOID MAIN '(' args ')' ':' STATIC void_block {
-        $$ = makeNode("MAIN"); addSonNodeToFatherNode(&$$, $9);}
+        $$ = makeNode("MAIN"); 
+        addSonNodeToFatherNode(&$$, $9);
+        addCode($$,"");}
     ;
-
 
 functions:
     functions function_type {$$ = combineNodes("", $1, $2);}
@@ -77,7 +86,8 @@ function_void:
     addSonNodeToFatherNode(&function,$3); 
     addSonNodeToFatherNode(&function,$5); 
     addSonNodeToFatherNode(&function, makeNode("VOID")); 
-    addSonNodeToFatherNode(&function, $7); 
+    addSonNodeToFatherNode(&function, $7);
+    addCode(function, ""); 
     addSonNodeToFatherNode(&$$,function);
     }
 
@@ -89,6 +99,7 @@ function_void:
     addSonNodeToFatherNode(&function,$5); 
     addSonNodeToFatherNode(&function, makeNode("VOID")); 
     addSonNodeToFatherNode(&function, $9); 
+    addCode(function, "");
     addSonNodeToFatherNode(&$$,function);
     }
 
@@ -100,6 +111,7 @@ function_void:
     addSonNodeToFatherNode(&function,$6); 
     addSonNodeToFatherNode(&function, makeNode("VOID")); 
     addSonNodeToFatherNode(&function, $8); 
+    addCode(function, "");
     addSonNodeToFatherNode(&$$,function);
     }
     |visibility VOID id '(' ARGS args ')' ':' STATIC void_block 
@@ -110,6 +122,7 @@ function_void:
     addSonNodeToFatherNode(&function,$6); 
     addSonNodeToFatherNode(&function, makeNode("VOID")); 
     addSonNodeToFatherNode(&function, $10); 
+    addCode(function, "");
     addSonNodeToFatherNode(&$$,function);
     }
     ; 
@@ -123,6 +136,7 @@ function:
     addSonNodeToFatherNode(&function,$5); 
     addSonNodeToFatherNode(&function, $2); 
     addSonNodeToFatherNode(&function, $7); 
+    addCode(function, "");
     addSonNodeToFatherNode(&$$,function);
     }
     |visibility func_type id '(' args ')' ':' STATIC function_block 
@@ -133,6 +147,7 @@ function:
     addSonNodeToFatherNode(&function,$5); 
     addSonNodeToFatherNode(&function, $2); 
     addSonNodeToFatherNode(&function, $9); 
+    addCode(function, "");
     addSonNodeToFatherNode(&$$,function);
     }
     |visibility func_type id '(' ARGS args ')' function_block 
@@ -143,6 +158,7 @@ function:
     addSonNodeToFatherNode(&function,$6); 
     addSonNodeToFatherNode(&function, $2); 
     addSonNodeToFatherNode(&function, $8); 
+    addCode(function, "");
     addSonNodeToFatherNode(&$$,function);
     }
     |visibility func_type id '(' ARGS args ')' ':' STATIC function_block 
@@ -153,6 +169,7 @@ function:
     addSonNodeToFatherNode(&function,$6); 
     addSonNodeToFatherNode(&function, $2); 
     addSonNodeToFatherNode(&function, $10); 
+    addCode(function, "");
     addSonNodeToFatherNode(&$$,function);
     }
     ;
@@ -167,35 +184,51 @@ func_type:
     |STRING {$$ = makeNode("STRING");}
     ;
 
- void_block:
+void_block:
     '{' '}' {$$ = makeNode ("BODY"); }
     |'{' declerations statments '}' 
     {
         $$ = makeNode ("BODY"); 
         node* var_node = makeNode("VAR"); 
         addNodesList(var_node,$2);
+        addCode(var_node, "");
         addSonNodeToFatherNode(&$$,var_node); 
         addNodesList($$, $3);
+        addCode($$,"");
     }
-    |'{' statments '}' {$$ = makeNode ("BODY"); addNodesList($$,$2);}
+    |'{' statments '}' {
+        $$ = makeNode ("BODY"); 
+        addNodesList($$,$2);
+        addCode($$,"");}
     |'{' functions declerations statments '}' 
     {
         $$ = makeNode("BODY"); 
         addNodesList($$, $2); 
         node* var_node = makeNode("VAR"); 
         addNodesList(var_node,$3);
+        addCode(var_node, "");
         addSonNodeToFatherNode(&$$,var_node);
         addNodesList($$,$4);
+        addCode($$,"");
     }
-    |'{' functions statments '}' {$$ = makeNode("BODY"); addNodesList($$, $2); addNodesList($$,$3);}
-    |'{' functions '}' {$$ = makeNode("BODY"); addNodesList($$, $2);}
+    |'{' functions statments '}' {
+        $$ = makeNode("BODY"); 
+        addNodesList($$, $2); 
+        addNodesList($$,$3);
+        addCode($$,"");}
+    |'{' functions '}' {
+        $$ = makeNode("BODY"); 
+        addNodesList($$, $2);
+        addCode($$,"");}
     |'{' declerations '}' 
     {
         $$ = makeNode ("BODY"); 
         node* var_node = makeNode("VAR"); 
         addNodesList(var_node,$2);
+        addCode(var_node, "");
         addSonNodeToFatherNode(&$$,var_node);
-    }
+        addCode($$,"");
+    }       
     ;
     
 function_block:
@@ -204,7 +237,11 @@ function_block:
         $$ = makeNode ("BODY"); 
         node* ret = makeNode("RETURN"); 
         addSonNodeToFatherNode(&ret,$3); 
+        char buffer[50];
+        sprintf(buffer, "%s %s\n", "\tReturn", $3->var); 
+        addCode(ret, buffer); 
         addSonNodeToFatherNode(&$$,ret);
+        addCode($$, "");
     }
     |'{' statments RETURN expression ';' '}' 
     {
@@ -212,7 +249,11 @@ function_block:
         node* ret = makeNode("RETURN"); 
         addNodesList($$, $2); 
         addSonNodeToFatherNode(&ret,$4); 
+        char buffer[50]; 
+        sprintf(buffer, "%s %s\n", "\tReturn", $4->var); 
+        addCode(ret, buffer);
         addSonNodeToFatherNode(&$$,ret);
+        addCode($$, "");
     }
     |'{' functions statments RETURN expression ';' '}' 
     {
@@ -229,10 +270,15 @@ function_block:
         node* var_node = makeNode("VAR"); 
         node* ret = makeNode("RETURN"); 
         addNodesList(var_node, $2); 
+        addCode(var_node, "");
         addSonNodeToFatherNode(&$$,var_node); 
         addNodesList($$, $3); 
         addSonNodeToFatherNode(&ret,$5); 
+        char buffer[50]; 
+        sprintf(buffer, "%s %s\n", "\tReturn", $5->var); 
+        addCode(ret, buffer); 
         addSonNodeToFatherNode(&$$,ret);
+        addCode($$, "");
     }
     |'{' functions declerations statments RETURN expression ';' '}' 
     {
@@ -241,32 +287,10 @@ function_block:
         node* ret = makeNode("RETURN");  
         addNodesList($$, $2);  
         addNodesList(var_node, $3); 
+        addCode(var_node, "");
         addSonNodeToFatherNode(&$$,var_node); 
         addNodesList($$, $4); 
         addSonNodeToFatherNode(&ret,$6); 
-        addSonNodeToFatherNode(&$$,ret);
-    }
-    |'{' declerations functions statments RETURN expression ';' '}' 
-    {
-        $$ = makeNode("BODY");
-        node* var_node = makeNode("VAR"); 
-        node* ret = makeNode("RETURN"); 
-        addNodesList($$, $2);  
-        addNodesList(var_node, $3); 
-        addSonNodeToFatherNode(&$$,var_node); 
-        addNodesList($$, $4); 
-        addSonNodeToFatherNode(&ret,$6); 
-        addSonNodeToFatherNode(&$$,ret);
-    }
-    |'{' declerations functions RETURN expression ';' '}' 
-    {
-        $$ = makeNode("BODY"); 
-        node* var_node = makeNode("VAR"); 
-        node* ret = makeNode("RETURN"); 
-        addNodesList($$, $2);  
-        addNodesList(var_node, $3); 
-        addSonNodeToFatherNode(&$$,var_node); 
-        addSonNodeToFatherNode(&ret,$5); 
         addSonNodeToFatherNode(&$$,ret);
     }
     |'{' functions RETURN expression ';' '}' 
@@ -283,9 +307,14 @@ function_block:
         node* var_node = makeNode("VAR"); 
         node* ret = makeNode("RETURN"); 
         addNodesList(var_node,$2);
+        addCode(var_node, ""); 
         addSonNodeToFatherNode(&$$,var_node); 
         addSonNodeToFatherNode(&ret,$4); 
+        char buffer[50]; 
+        sprintf(buffer, "%s %s\n", "\tReturn", $4->var); 
+        addCode(ret, buffer);  
         addSonNodeToFatherNode(&$$,ret);
+        addCode($$, "");
     }
     ; 
  
@@ -309,7 +338,10 @@ statment:
         addSonNodeToFatherNode(&ret, $2); 
         addSonNodeToFatherNode(&$$, ret);
     }
-    |RETURN ';' {$$ = makeNode("s"); node* ret = makeNode("RETURN"); addSonNodeToFatherNode(&$$, ret);}
+    |RETURN ';' {
+        $$ = makeNode("s"); 
+        node* ret = makeNode("RETURN"); 
+        addSonNodeToFatherNode(&$$, ret);}
     ;
 
 if_statment:
@@ -320,6 +352,7 @@ if_statment:
         if_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&if_node, $3); 
         addNodesList(if_node,$5); 
+        genIF3AC(if_node);
         addSonNodeToFatherNode(&$$,if_node);
     }  %prec PREC_IF
     ;
@@ -327,11 +360,13 @@ if_statment:
 if_else_statment:
     IF '(' expression ')' statment ELSE statment 
     {
-        $$ = makeNode("s"); node* if_node = makeNode("IF-ELSE"); 
+        $$ = makeNode("s"); 
+        node* if_node = makeNode("IF-ELSE"); 
         if_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&if_node, $3); 
         addNodesList(if_node,$5); 
         addNodesList(if_node, $7); 
+        genIFELSE3AC(if_node); 
         addSonNodeToFatherNode(&$$,if_node);}
     ;
 
@@ -345,6 +380,7 @@ loop:
         addSonNodeToFatherNode(&for_node, $5); 
         addSonsNodesToFatherNode(for_node, $7); 
         addSonsNodesToFatherNode(for_node, $9); 
+        genFOR3AC(for_node);
         addSonNodeToFatherNode(&$$,for_node);
     }
     | WHILE '(' expression ')' statment 
@@ -354,6 +390,7 @@ loop:
         while_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&while_node, $3); 
         addSonsNodesToFatherNode(while_node, $5); 
+        genWHILE3AC(while_node); 
         addSonNodeToFatherNode(&$$,while_node);}
  
     | DO block WHILE '(' expression ')' ';' 
@@ -362,13 +399,12 @@ loop:
         node* while_node = makeNode("DO-WHILE"); 
         while_node->line_number = $5->line_number; 
         addSonsNodesToFatherNode(while_node, $2); 
-        addSonNodeToFatherNode(&while_node, $5); 
+        addSonNodeToFatherNode(&while_node, $5);
+        genDOWHILE3AC(while_node);  
         addSonNodeToFatherNode(&$$,while_node);
     }
 
     ;
-
-
 
 init_for:
     id ASSIGN expression 
@@ -378,6 +414,7 @@ init_for:
         ass_node->line_number = number_line; 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
+        genAssignment3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
     | pointer ASSIGN expression 
@@ -387,6 +424,7 @@ init_for:
         ass_node->line_number = number_line; 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
+        genPOINTER3AC(ass_node);
         addSonNodeToFatherNode(&$$,ass_node);
     }
     ;
@@ -401,51 +439,131 @@ ass_string:
         addSonNodeToFatherNode(&$1, index); 
         addSonNodeToFatherNode(&ass_node, $1); 
         addSonNodeToFatherNode(&ass_node,$6); 
+        genSTRINGAssign3AC(ass_node);
         addSonNodeToFatherNode(&$$,ass_node);
     }
     ;
 
 expression:
-    expression PLUS expression {$$ = makeNode("+"); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression MINUS expression {$$ = makeNode("-"); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression MULTI expression {$$ = makeNode("*"); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);} 
-    | expression DIV expression {$$ = makeNode("/"); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression BIGER expression { $$ = makeNode (">"); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression GE expression { $$ = makeNode (">="); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression LOWER expression { $$ = makeNode ("<"); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression LE expression { $$ = makeNode ("<="); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression EQUAL expression { $$ = makeNode ("=="); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression NOTEQUAL expression { $$ = makeNode ("!="); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$, $3);}
-    | expression AND expression {$$ = makeNode("&&"); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$,$3);} 
-    | expression OR expression {$$ = makeNode("||"); $$->line_number = $1->line_number; addSonNodeToFatherNode(&$$,$1); addSonNodeToFatherNode(&$$,$3);} 
-    | NOT expression {$$ = makeNode ("NOT"); $$->line_number = $2->line_number; addSonNodeToFatherNode(&$$,$2);}
-    | '(' expression ')' {$$ = $2; $$->line_number = $2->line_number;}
-    | LEN expression LEN {$$ = makeNode("LEN"); addSonNodeToFatherNode(&$$,$2);}
-    | ADDRESS id {$$ = makeNode("&"); addSonNodeToFatherNode(&$$, $2);}
-    | ADDRESS string_id {$$ = makeNode("&"); addSonNodeToFatherNode(&$$, $2);}
+    expression PLUS expression {
+        $$ = makeNode("+"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression MINUS expression {
+        $$ = makeNode("-"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression MULTI expression {
+        $$ = makeNode("*"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);} 
+    | expression DIV expression {
+        $$ = makeNode("/"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression BIGER expression { 
+        $$ = makeNode (">"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression GE expression { 
+        $$ = makeNode (">="); 
+        $$->line_number = $1->line_number;
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression LOWER expression { 
+        $$ = makeNode ("<"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression LE expression { 
+        $$ = makeNode ("<="); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression EQUAL expression { 
+        $$ = makeNode ("=="); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression NOTEQUAL expression { 
+        $$ = makeNode ("!="); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1);
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$);}
+    | expression AND expression {
+        $$ = makeNode("&&"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$,$3);
+        genExperssion3AC($$);} 
+    | expression OR expression {
+        $$ = makeNode("||"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$,$3);
+        genExperssion3AC($$);} 
+    | NOT expression {
+        $$ = makeNode ("NOT"); 
+        $$->line_number = $2->line_number; 
+        freshVar($$); 
+        char buffer[50]; 
+        sprintf(buffer, "\t%s = !%s\n", $$->var, $2->var); 
+        addSonNodeToFatherNode(&$$,$2);
+        addCode($$, buffer);}
+    | '(' expression ')' {
+        $$ = $2; 
+        $$->line_number = $2->line_number;}
+    | LEN expression LEN {
+        $$ = makeNode("LEN"); 
+        addSonNodeToFatherNode(&$$,$2);}
+    | ADDRESS id {
+        $$ = makeNode("&"); 
+        addSonNodeToFatherNode(&$$, $2);}
+    | ADDRESS string_id {
+        $$ = makeNode("&"); 
+        addSonNodeToFatherNode(&$$, $2);}
     | INT_LITERAL 
     {
         $$ = makeNode(yytext); 
         $$->node_type = "INT"; 
         $$->line_number = number_line;
+        addVar($$ ,yytext);
     }
     | HEX_LITERAL 
     {
         $$ = makeNode(yytext); 
         $$->node_type = "INT"; 
         $$->line_number = number_line;
+        addVar($$ ,yytext);
     }
     | DOUBLE_LITERAL 
     {
         $$ = makeNode(yytext); 
         $$->node_type = "DOUBLE"; 
         $$->line_number = number_line;
+        addVar($$ ,yytext);
     }
     | FLOAT_LITERAL 
     {
         $$ = makeNode(yytext); 
         $$->node_type = "FLOAT"; 
         $$->line_number = number_line;
+        addVar($$ ,yytext);
     }
     | string_id 
     | BOOL_TRUE 
@@ -453,12 +571,14 @@ expression:
         $$ = makeNode(yytext); 
         $$->node_type = "BOOL"; 
         $$->line_number = number_line;
+        addVar($$ ,yytext);
     }
     | BOOL_FALSE 
     {
         $$ = makeNode(yytext); 
         $$->node_type = "BOOL"; 
         $$->line_number = number_line;
+        addVar($$ ,yytext);
     }
     | NULL_P  
     { 
@@ -472,20 +592,34 @@ expression:
         $$ = makeNode(yytext); 
         $$->node_type = "CHAR"; 
         $$->line_number = number_line;
+        addVar($$ ,yytext);
     }
     | STRING_LITERAL 
     {
         $$ = makeNode(yytext); 
         $$->node_type = "STRING"; 
         $$->line_number = number_line;
+        addVar($$ ,yytext);
     }
     | pointer %prec MULL
-    ;
+    /* | NEWuminus {
+        $$ = $1; 
+        freshVar($$); 
+        char buffer[20]; 
+        sprintf(buffer, "\t%s = -%s\n", $$->var, $1->sons_nodes[0]->sons_nodes[0]->var); 
+        addCode($$, buffer);} 
+        %prec MIN
+    ; */
 
     ;
 
 pointer:
-    MULTI expression {$$ = makeNode("POINTER"); node* pointer = makeNode("*"); addSonNodeToFatherNode(&pointer, $2); addSonNodeToFatherNode(&$$,pointer);}
+    MULTI expression {
+        $$ = makeNode("POINTER"); 
+        node* pointer = makeNode("*"); 
+        addSonNodeToFatherNode(&pointer, $2); 
+        addVar($$, $2->var);
+        addSonNodeToFatherNode(&$$,pointer);}
 
 func_call: 
     id '(' parameter_list ')' 
@@ -497,6 +631,7 @@ func_call:
         args->line_number = $1->line_number; 
         addNodesList(args, $3); 
         addSonNodeToFatherNode(&fun_call, args); 
+        genFUNCTIONCALL3AC(fun_call, 0);
         addSonNodeToFatherNode(&$$,fun_call);
     }
     |id ASSIGN id '(' parameter_list ')' 
@@ -511,7 +646,11 @@ func_call:
         args->line_number = $1->line_number; 
         addNodesList(args, $5); 
         addSonNodeToFatherNode(&fun_call, args); 
+        genFUNCTIONCALL3AC(fun_call, 1); 
         addSonNodeToFatherNode(&ass_node, fun_call); 
+        char buffer[20]; 
+        sprintf(buffer,"\t%s = %s\n", $1->var, fun_call->var); 
+        addCode(ass_node, buffer); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
     |id '(' ')' 
@@ -522,6 +661,7 @@ func_call:
         addSonNodeToFatherNode(&fun_call,$1); 
         args->line_number = $1->line_number; 
         addSonNodeToFatherNode(&fun_call, args); 
+        genFUNCTIONCALL3AC(fun_call, 0); 
         addSonNodeToFatherNode(&$$,fun_call);
     }
     |id ASSIGN id '(' ')' 
@@ -535,35 +675,51 @@ func_call:
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&fun_call,$3); 
         addSonNodeToFatherNode(&fun_call, args); 
+        genFUNCTIONCALL3AC(fun_call, 1); 
         addSonNodeToFatherNode(&ass_node, fun_call); 
+        char buffer[20]; 
+        sprintf(buffer,"\t%s = %s\n", $1->var, fun_call->var); 
+        addCode(ass_node, buffer); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
     ; 
 
 parameter_list:
-    parameter_list ',' parm {$$ = combineNodes("", $1, $3);}
-    | parm {$$ = $1;}
+    parameter_list parm {
+        $$ = combineNodes("", $1, $2);
+    }
+    | parm 
     ;
 
 parm:
-    expression {$$ = makeNode("s"); addSonNodeToFatherNode(&$$,$1);}
+    expression ',' {
+        $$ = makeNode("s"); 
+        addSonNodeToFatherNode(&$$,$1);}
+    | expression {
+        $$ = makeNode("s"); 
+        addSonNodeToFatherNode(&$$,$1);
+    }
     ;
 
 block:
-    '{' '}' {$$ =  makeNode("BLOCK");}
+    '{' '}' {$$ =  makeNode("BLOCK");addCode($$, "");}
     |'{' statments '}' 
     {
         $$ = makeNode("s"); 
         node* block = makeNode("BLOCK"); 
         addNodesList(block,$2); 
+        addCode(block, ""); 
         addSonNodeToFatherNode(&$$,block);
     }
     |'{' declerations '}' 
     {
         $$ = makeNode("s"); 
         node* block = makeNode("BLOCK"); 
-        addNodesList(makeNode("VAR"),$2); 
-        addSonNodeToFatherNode(&block,block); 
+        node* var = makeNode("VAR");
+        addNodesList(var,$2); 
+        addSonNodeToFatherNode(&block,var); 
+        addCode(var,""); 
+        addCode(block, ""); 
         addSonNodeToFatherNode(&$$,block);
     }
     |'{' declerations statments '}' 
@@ -574,6 +730,8 @@ block:
         addNodesList(var_node,$2); 
         addSonNodeToFatherNode(&block,var_node); 
         addNodesList(block, $3); 
+        addCode(var_node,""); 
+        addCode(block, ""); 
         addSonNodeToFatherNode(&$$,block);
     }    
     |'{' RETURN expression ';' '}' 
@@ -581,7 +739,11 @@ block:
         $$ = makeNode("BLOCK"); 
         node* ret = makeNode("RETURN"); 
         addSonNodeToFatherNode(&ret,$3); 
+        char buffer[50]; 
+        sprintf(buffer, "%s %s\n", "\tReturn", $3->var); 
+        addCode(ret, buffer); 
         addSonNodeToFatherNode(&$$,ret);
+        addCode($$, "");
     }
     |'{' statments RETURN expression ';' '}' 
     {
@@ -590,7 +752,11 @@ block:
         node* ret = makeNode("RETURN"); 
         addNodesList(block,$2);
         addSonNodeToFatherNode(&ret,$4); 
-        addSonNodeToFatherNode(&block,ret); 
+        char buffer[50]; 
+        sprintf(buffer, "%s %s\n", "\tReturn", $4->var); 
+        addCode(ret, buffer); 
+        addSonNodeToFatherNode(&block,ret);
+        addCode(block, "");  
         addSonNodeToFatherNode(&$$,block);
     }
     |'{' declerations RETURN expression ';' '}' 
@@ -602,7 +768,12 @@ block:
         addNodesList(var_node,$2); 
         addSonNodeToFatherNode(&block,var_node); 
         addSonNodeToFatherNode(&ret,$4); 
+        char buffer[50]; 
+        sprintf(buffer, "%s %s\n", "\tReturn", $4->var); 
+        addCode(ret, buffer); 
         addSonNodeToFatherNode(&block,ret); 
+        addCode(var_node,""); 
+        addCode(block, ""); 
         addSonNodeToFatherNode(&$$,block);
     }
     |'{' declerations statments RETURN expression ';' '}' 
@@ -615,26 +786,41 @@ block:
         addSonNodeToFatherNode(&block,var_node); 
         addNodesList(block, $3); 
         addSonNodeToFatherNode(&ret,$5); 
+        char buffer[50]; 
+        sprintf(buffer, "%s %s\n", "\tReturn", $5->var); 
+        addCode(ret, buffer);
         addSonNodeToFatherNode(&block,ret); 
+        addCode(var_node,""); 
+        addCode(block, ""); 
         addSonNodeToFatherNode(&$$,block);
     }  
     ;   
-
  
 args:
     {$$ = makeNode("WITHOT ARGS");}
-    | more_args {$$ = makeNode("ARGS"); addNodesList($$,$1);}
-    | more_args ';' args {$$ = makeNode("ARGS"); addNodesList($$,$1); addNodesList($$, $3);}
+    | more_args {
+        $$ = makeNode("ARGS"); 
+        addNodesList($$,$1);}
+    | more_args ';' args {
+        $$ = makeNode("ARGS"); 
+        addNodesList($$,$1); 
+        addNodesList($$, $3);}
     ;
 
 more_args:
     var_type params 
     {
-        $$ = makeNode("s"); node* args_node = $1; addSonsNodesToFatherNode(args_node, $2); addSonNodeToFatherNode(&$$,args_node);
+        $$ = makeNode("s"); 
+        node* args_node = $1; 
+        addSonsNodesToFatherNode(args_node, $2); 
+        addSonNodeToFatherNode(&$$,args_node);
     }
     |var_type ':' params 
     {
-        $$ = makeNode("s"); node* args_node = $1; addSonsNodesToFatherNode(args_node, $3); addSonNodeToFatherNode(&$$,args_node);}
+        $$ = makeNode("s"); 
+        node* args_node = $1; 
+        addSonsNodesToFatherNode(args_node, $3); 
+        addSonNodeToFatherNode(&$$,args_node);}
     ;
     
 params:
@@ -642,10 +828,9 @@ params:
     |id 
     ;
 
-
 declerations:
     declerations var_decleration {$$ = combineNodes("fd",$1,$2);}
-    |var_decleration
+    |var_decleration 
     |declerations string_decleration {$$ = combineNodes("fd",$1,$2);}
     |string_decleration
     ;
@@ -655,14 +840,27 @@ var_decleration:
     ;
 
 vars:
-    var_type variables {$$ = makeNode("s"); node* var_node = $1; addNodesList(var_node,$2); addSonNodeToFatherNode(&$$,var_node);}
-    |var_type ':' variables {$$ = makeNode("s"); node* var_node = $1; addNodesList(var_node,$3); addSonNodeToFatherNode(&$$,var_node);}
+    var_type variables {
+        $$ = makeNode("s"); 
+        node* var_node = $1; 
+        addNodesList(var_node,$2); 
+        addCode(var_node, ""); 
+        addSonNodeToFatherNode(&$$,var_node);}
+    |var_type ':' variables {
+        $$ = makeNode("s"); 
+        node* var_node = $1; 
+        addNodesList(var_node,$3); 
+        addCode(var_node, ""); 
+        addSonNodeToFatherNode(&$$,var_node);}
     ;
 
 string_decleration:
     STRING str_args ';' 
     {
-        $$ = makeNode("s"); node* str = makeNode("STRING"); addNodesList(str,$2); addSonNodeToFatherNode(&$$,str);}
+        $$ = makeNode("s"); 
+        node* str = makeNode("STRING"); 
+        addNodesList(str,$2); 
+        addSonNodeToFatherNode(&$$,str);}
     ;
 
 str_args:
@@ -708,56 +906,70 @@ str_args:
     }
     ; 
 
-
-
-
 variables:
+    variables ',' variable {$$ = combineNodes("", $1, $3);}
+    | variable
+    ;
+
+variable:
     id 
-    |id ',' variables {$$ = makeNode("s"); addSonNodeToFatherNode(&$$,$1); addNodesList($$,$3);}
+    /* ????|id ',' variables {
+        $$ = makeNode("s"); 
+        addSonNodeToFatherNode(&$$,$1); 
+        addNodesList($$,$3);} */
     |id ASSIGN expression 
     {
         $$ = makeNode("s"); 
         node* ass_node= makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
+        genAssignment3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
-    |id ASSIGN expression ',' variables 
+    /* ????|id ASSIGN expression ',' variables 
     {
         $$ = makeNode("s"); 
         node* ass_node = makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
+        genAssignment3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node); 
         addNodesList($$,$5);
-    }
+    } */
     |id ASSIGN func_call 
     {
         $$ = makeNode("s"); 
         node* ass_node= makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addNodesList(ass_node,$3); 
+        genAssignment3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
-    |id ASSIGN func_call ',' variables 
+    /* ????|id ASSIGN func_call ',' variables 
     {
         $$ = makeNode("s"); node* ass_node = makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addNodesList(ass_node,$3); 
+        genAssignment3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node); 
         addNodesList($$,$5);
-    }
+    } */
     ;
-
 
 string_id:
-    id '[' expression ']' {$$ = $1; node* index = makeNode("INDEX"); addSonNodeToFatherNode(&index,$3); addSonNodeToFatherNode(&$$, index);}
-
+    id '[' expression ']' {
+        $$ = $1; 
+        node* index = makeNode("INDEX"); 
+        addSonNodeToFatherNode(&index,$3); 
+        addSonNodeToFatherNode(&$$, index);}
 
 id: 
-    ID {$$ = makeNode(yytext); $$->node_type = "ID"; $$->line_number = number_line;}
+    ID {$$ = makeNode(yytext); $$->node_type = "ID"; $$->line_number = number_line;addVar($$ ,yytext);}
     ;
 
+/* uminus:???
+    MINUS expression {$$ = mkNode("NEGATIVE"); node* m = mkNode("-"); addNode(&m, $2); addCode(m, "");  addNode(&$$,m); addCode($$ ,"");}
+    ; */
 %%
 
 
