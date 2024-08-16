@@ -572,6 +572,7 @@ expression:
         $$->node_type = "BOOL"; 
         $$->line_number = number_line;
         addVar($$ ,yytext);
+        addCode($$, "");
     }
     | BOOL_FALSE 
     {
@@ -579,6 +580,8 @@ expression:
         $$->node_type = "BOOL"; 
         $$->line_number = number_line;
         addVar($$ ,yytext);
+        addCode($$, "");
+
     }
     | NULL_P  
     { 

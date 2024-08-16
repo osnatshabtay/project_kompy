@@ -18,7 +18,7 @@ public int foo_2(){
     }
 private int foo_3() { 
     var int: x<-5;
-    if (2==2) 
+    if (false) 
     { 
         var int: pp<-foo(8,9, 's');
         var int: w<-9;
