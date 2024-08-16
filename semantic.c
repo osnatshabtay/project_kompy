@@ -287,6 +287,34 @@ void pushStatementsToScope(node** statements, int num_of_statements){
                 char *right = checkExpAndReturnItsType(statements[i]->sons_nodes[1]);
 				if (!strcmp(left, "STRING"))
 					checkStringAssignment(statements[i], right);
+				else if (!strcmp(left, "INT") && strcmp(right, "INT")){
+					printf("Error Line %d %s cannot be assigned with %s.\n", statements[i]->sons_nodes[0]->line_number, left, right);
+					exit(1);
+				}
+				else if (!strcmp(left, "BOOL") && strcmp(right, "BOOL")){
+					printf("Error Line %d %s cannot be assigned with %s.\n", statements[i]->sons_nodes[0]->line_number, left, right);
+					exit(1);
+				}
+				else if (!strcmp(left, "CHAR") && strcmp(right, "CHAR")){
+					printf("Error Line %d %s cannot be assigned with %s.\n", statements[i]->sons_nodes[0]->line_number, left, right);
+					exit(1);
+				}
+				else if (!strcmp(left, "DOUBLE") && (strcmp(right, "INT") && strcmp(right, "DOUBLE") && strcmp(right, "FLOAT"))){
+					printf("Error Line %d %s cannot be assigned with %s.\n", statements[i]->sons_nodes[0]->line_number, left, right);
+					exit(1);
+				}
+				else if (!strcmp(left, "FLOAT") && (strcmp(right, "INT") && strcmp(right, "FLOAT"))){
+					printf("Error Line %d %s cannot be assigned with %s.\n", statements[i]->sons_nodes[0]->line_number, left, right);
+					exit(1);
+				}
+				else if (!strcmp(left, "INT") && strcmp(right, "INT")){
+					printf("Error Line %d %s cannot be assigned with %s.\n", statements[i]->sons_nodes[0]->line_number, left, right);
+					exit(1);
+				}
+				else if (!strcmp(left, "INT") && strcmp(right, "INT")){
+					printf("Error Line %d %s cannot be assigned with %s.\n", statements[i]->sons_nodes[0]->line_number, left, right);
+					exit(1);
+				}
 				else if (statements[i]->sons_nodes[0]->sons_count > 0){
 					printf("Error Line %d %s index need to be int.\n", statements[i]->sons_nodes[0]->line_number, left);
 					exit(1);
@@ -320,13 +348,14 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 
 		for(int j = 0; j < num_of_vars; j++){
 			if ((!strcmp(vars_declared[j]->token, "<-") && vars_declared[j]->sons_nodes[1]->node_type != NULL && !strcmp("NULL", vars_declared[j]->sons_nodes[1]->node_type)))
+			{	
 				if (strcmp(var_type, "INT*") && strcmp(var_type, "CHAR*") && strcmp(var_type, "DOUBLE*") && strcmp(var_type, "FLOAT*")){
 					printf("Error Line %d can not assign NULL to %s\n", vars_declared[j]->line_number, var_type);
 					exit(1);
 				}
 				else
 					addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->sons_nodes[0]->token, var_type, 0, 0);
-			
+			}
 			else if ((!strcmp(vars_declared[j]->token, "<-") && strcmp(var_type, "STRING") == 0)){
 				char* exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]);
 				if(strcmp("INT", exp_type)){
@@ -355,8 +384,9 @@ void pushSymbolsToSymbolTable(node* var_declaration_nosde){
 			}
 			
 			else{
-				if (strcmp(vars_declared[j]->token, "<-"))
+				if (strcmp(vars_declared[j]->token, "<-")){
 					addSymbolToSymbolTable(&SCOPE_STACK_TOP, NULL, vars_declared[j]->token, var_type, 0, 0);
+				}
 				else{
 					char* exp_type = checkExpAndReturnItsType(vars_declared[j]->sons_nodes[1]);
 					if (!strcmp(var_type, exp_type))

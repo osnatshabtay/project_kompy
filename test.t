@@ -21,8 +21,9 @@ private int foo_3() {
     { 
         var int: pp<-foo(8,9, 's');
         var int: w<-9;
-        x<-7;
-        foo(w,x, 'c'); 
+        w<-9;
+        /* x<-7;*/
+        foo(w,x, 'c');
         
     }  
     else{
