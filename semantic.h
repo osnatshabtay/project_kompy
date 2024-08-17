@@ -93,9 +93,8 @@ char* extractCondition(const char* input);
 char* trimSpaces(const char* str);
 void print3AC(node* node);
 void genOR3AC(node* tree);
-
-
-
+void removeStringFromCode(char* str, const char* to_remove);
+int isBooleanOperator(node* node);
 
 
 #endif 

@@ -31,7 +31,7 @@ s:
         findCalledFunctions($1);
         checkMainNonStaticCalls($1);
         checkStaticNonStaticCallsViolation();
-        printTree ($1,0);
+        // printTree ($1,0);
         addCode($1,"");
         print3AC($1);
         }
@@ -413,7 +413,7 @@ init_for:
         node* ass_node = makeNode("<-"); 
         ass_node->line_number = number_line; 
         addSonNodeToFatherNode(&ass_node,$1); 
-        addSonNodeToFatherNode(&ass_node,$3); 
+        addSonNodeToFatherNode(&ass_node,$3);
         genAssignment3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
@@ -543,6 +543,7 @@ expression:
         $$->node_type = "INT"; 
         $$->line_number = number_line;
         addVar($$ ,yytext);
+        // addCode($$, yytext);
     }
     | HEX_LITERAL 
     {
@@ -568,11 +569,12 @@ expression:
     | string_id 
     | BOOL_TRUE 
     {
+
         $$ = makeNode(yytext); 
         $$->node_type = "BOOL"; 
         $$->line_number = number_line;
         addVar($$ ,yytext);
-        addCode($$, "");
+        addCode($$, "truetoremove");
     }
     | BOOL_FALSE 
     {
@@ -580,7 +582,7 @@ expression:
         $$->node_type = "BOOL"; 
         $$->line_number = number_line;
         addVar($$ ,yytext);
-        addCode($$, "");
+        addCode($$, "ftoremove");
 
     }
     | NULL_P  

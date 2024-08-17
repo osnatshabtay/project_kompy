@@ -873,8 +873,15 @@ void findCalledFunctions(node* tree) {
 
 
 
+int isBooleanOperator(node* node){
+	if (strcmp(node->token, "==") == 0 || strcmp(node->token, "<") == 0 || strcmp(node->token, ">") == 0 
+	|| strcmp(node->token, "<=") == 0 || strcmp(node->token, ">=") == 0 || strcmp(node->token, "!=") == 0
+	|| strcmp(node->token, "&&") == 0 || strcmp(node->token, "||") == 0) {
+		return 1;
+	}
+	return 0;
 
-
+}
 
 void addVar(node* node, char* var){
 	node->var = strdup(var);
@@ -915,7 +922,7 @@ void addCode(node* node, char* code){
 
 void freshVar(node* node){
 	char new[10];
-	sprintf(new ,"t%d", var++);
+	sprintf(new, "t%d", var++);
 	node->var = strdup(new);
 }
 
@@ -930,8 +937,9 @@ void genIF3AC(node* node){
     char buffer[10000] = ""; // Buffer to store the generated code
     char* L1 = freshLabel(); // Label for the true branch
     char* L2 = freshLabel(); // Label for the false branch
+	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
 	//genOR3AC(node);
-    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", extractCondition(node->sons_nodes[0]->code), L1);
+    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L1);
 
     sprintf(buffer + strlen(buffer), "\tgoto %s\n", L2);
 
@@ -964,8 +972,9 @@ void genIFELSE3AC(node* node){
     char* L1 = freshLabel(); // Label for the true branch
     char* L2 = freshLabel(); // Label for the false branch
     char* L3 = freshLabel(); // Label for the end of the if-else block
+	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
 
-    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", extractCondition(node->sons_nodes[0]->code), L1);
+    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L1);
 
     sprintf(buffer + strlen(buffer), "\tgoto %s\n", L2);
 
@@ -1203,12 +1212,20 @@ void genAssignment3AC(node* node){
 			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
 		}
 
+		else if (isBooleanOperator(node->sons_nodes[1])){
+			freshVar(node->sons_nodes[1]);
+			sprintf(buffer,"\t%s = %s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->code);
+			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
+		}
+
+
 		else if (!strcmp(node->sons_nodes[0]->token, "PTR") || !strcmp(node->sons_nodes[1]->token, "PTR") || !strcmp(node->sons_nodes[1]->token, "&")){
 			genPOINTER3AC(node);
 		}
 
-		else
+		else{
 			sprintf(buffer,"\t%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
+		}
 	}
 	else {
 		if (!strcmp(node->sons_nodes[1]->node_type, "ID")){
@@ -1226,11 +1243,18 @@ void genAssignment3AC(node* node){
 
 void genExperssion3AC(node* node){
 	char buffer[10000] ="";
-	if (strcmp(node->token, "==") == 0 || strcmp(node->token, "<") == 0 || strcmp(node->token, ">") == 0 
-	|| strcmp(node->token, "<=") == 0 || strcmp(node->token, ">=") == 0 || strcmp(node->token, "!=") == 0) {
+	// if (strcmp(node->token, "==") == 0 || strcmp(node->token, "<") == 0 || strcmp(node->token, ">") == 0 
+	// || strcmp(node->token, "<=") == 0 || strcmp(node->token, ">=") == 0 || strcmp(node->token, "!=") == 0
+	// || strcmp(node->token, "&&") == 0 || strcmp(node->token, "||") == 0) {
+	// 	sprintf(buffer,"\t%s = %s %s %s\n", node->var, node->sons_nodes[0]->var, node->token, node->sons_nodes[1]->var);
+	// 	addCode(node, buffer);
+	// }
+	if (isBooleanOperator(node)) {
+		// freshVar(node);
 		sprintf(buffer,"\t%s = %s %s %s\n", node->var, node->sons_nodes[0]->var, node->token, node->sons_nodes[1]->var);
 		addCode(node, buffer);
-	} else {
+	}
+	else {
 		freshVar(node);
 		sprintf(buffer,"\t%s = %s %s %s\n", node->var, node->sons_nodes[0]->var, node->token, node->sons_nodes[1]->var);
 		addCode(node, buffer);
@@ -1272,6 +1296,7 @@ char* extractCondition(const char* input) {
         return NULL;
     }
 
+	// printf("\n\nend --------> %s <----------\n\n", trimmed_condition);
     return trimmed_condition;
 }
 
@@ -1289,10 +1314,29 @@ char* trimSpaces(const char* str) {
     }
     strncpy(trimmed, str, length);
     trimmed[length] = '\0';
-
     return trimmed;
 }
 
+void removeStringFromCode(char* str, const char* to_remove) {
+    size_t nullStrLen = strlen(to_remove);
+    char *match;
+    while ((match = strstr(str, to_remove)) != NULL) {
+        // Move the remainder of the string after "(null)" to the position of the first occurrence
+        memmove(match, match + nullStrLen, strlen(match + nullStrLen) + 1);
+    }
+}
+
 void print3AC(node* node){
+	const char *to_remove = "falsetoremove";
+	removeStringFromCode(node->code, to_remove);
+
+	const char *to_remove4 = "truetoremove";
+	removeStringFromCode(node->code, to_remove4);
+
+	// const char *to_remove2 = "(null)";
+	// removeStringFromCode(node->code, to_remove2);
+
+	// const char *to_remove3 = "\n\t = ";
+	// removeStringFromCode(node->code, to_remove3);
 	printf("%s", node->code);
 }
