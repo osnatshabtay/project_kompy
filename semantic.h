@@ -87,7 +87,7 @@ void genSTRINGMemAssign3AC(node* node);
 void genPOINTER3AC(node* node);
 void STRINGAssignSTRING3AC(node* n);
 void genAssignment3AC(node* node);
-void genExperssion3AC(node* node);
+void genExperssion3AC(node* node, int from_assignment);
 int calculateTotalVarSize(node* args);
 char* extractCondition(const char* input);
 char* trimSpaces(const char* str);

@@ -998,9 +998,10 @@ void genWHILE3AC(node* node) {
     char* L1 = freshLabel(); // Label for the start of the loop
     char* L2 = freshLabel(); // Label for the exit of the loop
     char* L3 = freshLabel(); // Label for the loop body
+	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
 
     sprintf(buffer, "%s:", L1);
-    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", extractCondition(node->sons_nodes[0]->code), L2);
+    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L2);
     sprintf(buffer + strlen(buffer), "\tgoto %s\n", L3);
 
     sprintf(buffer + strlen(buffer), "%s:", L2);
@@ -1025,8 +1026,8 @@ void genDOWHILE3AC(node* node) {
     if (strcmp(node->sons_nodes[0]->code, "")) {
         sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[0]->code);
     }
-
-    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", extractCondition(node->sons_nodes[1]->code), L1);
+	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[1]->code);
+    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L1);
     sprintf(buffer + strlen(buffer), "\tGoto %s\n", L2);
 
     sprintf(buffer + strlen(buffer), "%s:", L2);
@@ -1043,7 +1044,8 @@ void genFOR3AC(node* node){
 	if (strcmp(node->sons_nodes[0]->code,"")){
 		sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[0]->code);
 		sprintf(buffer + strlen(buffer), "%s:", L1);
-    	sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", extractCondition(node->sons_nodes[1]->code), L2);
+		char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[1]->code);
+    	sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L2);
 		sprintf(buffer + strlen(buffer), "\tgoto %s\n",  L3);
 	}
 	
@@ -1213,8 +1215,8 @@ void genAssignment3AC(node* node){
 		}
 
 		else if (isBooleanOperator(node->sons_nodes[1])){
-			freshVar(node->sons_nodes[1]);
-			sprintf(buffer,"\t%s = %s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->code);
+			// freshVar(node->sons_nodes[1]);
+			// sprintf(buffer,"\t%s = %s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->code);
 			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
 		}
 
@@ -1241,15 +1243,9 @@ void genAssignment3AC(node* node){
 	addCode(node, buffer);
 }
 
-void genExperssion3AC(node* node){
+void genExperssion3AC(node* node, int from_assignment){
 	char buffer[10000] ="";
-	// if (strcmp(node->token, "==") == 0 || strcmp(node->token, "<") == 0 || strcmp(node->token, ">") == 0 
-	// || strcmp(node->token, "<=") == 0 || strcmp(node->token, ">=") == 0 || strcmp(node->token, "!=") == 0
-	// || strcmp(node->token, "&&") == 0 || strcmp(node->token, "||") == 0) {
-	// 	sprintf(buffer,"\t%s = %s %s %s\n", node->var, node->sons_nodes[0]->var, node->token, node->sons_nodes[1]->var);
-	// 	addCode(node, buffer);
-	// }
-	if (isBooleanOperator(node)) {
+	if (isBooleanOperator(node) && !from_assignment) {
 		// freshVar(node);
 		sprintf(buffer,"\t%s = %s %s %s\n", node->var, node->sons_nodes[0]->var, node->token, node->sons_nodes[1]->var);
 		addCode(node, buffer);
@@ -1333,10 +1329,11 @@ void print3AC(node* node){
 	const char *to_remove4 = "truetoremove";
 	removeStringFromCode(node->code, to_remove4);
 
-	// const char *to_remove2 = "(null)";
-	// removeStringFromCode(node->code, to_remove2);
+	const char *to_remove2 = "(null)";
+	removeStringFromCode(node->code, to_remove2);
 
-	// const char *to_remove3 = "\n\t = ";
-	// removeStringFromCode(node->code, to_remove3);
+	const char *to_remove3 = "\n\t =";
+	removeStringFromCode(node->code, to_remove3);
+	
 	printf("%s", node->code);
 }

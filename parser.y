@@ -407,7 +407,17 @@ loop:
     ;
 
 init_for:
-    id ASSIGN expression 
+    id ASSIGN bool_expression_from_assignment 
+    {
+        $$ = makeNode("s"); 
+        node* ass_node = makeNode("<-"); 
+        ass_node->line_number = number_line; 
+        addSonNodeToFatherNode(&ass_node,$1); 
+        addSonNodeToFatherNode(&ass_node,$3);
+        genAssignment3AC(ass_node); 
+        addSonNodeToFatherNode(&$$,ass_node);
+    }
+    | id ASSIGN expression 
     {
         $$ = makeNode("s"); 
         node* ass_node = makeNode("<-"); 
@@ -444,79 +454,137 @@ ass_string:
     }
     ;
 
+bool_expression_from_assignment:
+    expression BIGER expression { 
+        $$ = makeNode (">"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$, 1);}
+    | expression GE expression { 
+        $$ = makeNode (">="); 
+        $$->line_number = $1->line_number;
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$, 1);}
+    | expression LOWER expression { 
+        $$ = makeNode ("<"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$, 1);}
+    | expression LE expression { 
+        $$ = makeNode ("<="); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$, 1);}
+    | expression EQUAL expression { 
+        $$ = makeNode ("=="); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$, 1);}
+    | expression NOTEQUAL expression { 
+        $$ = makeNode ("!="); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1);
+        addSonNodeToFatherNode(&$$, $3);
+        genExperssion3AC($$, 1);}
+    | expression AND expression {
+        $$ = makeNode("&&"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$,$3);
+        genExperssion3AC($$, 1);} 
+    | expression OR expression {
+        $$ = makeNode("||"); 
+        $$->line_number = $1->line_number; 
+        addSonNodeToFatherNode(&$$,$1); 
+        addSonNodeToFatherNode(&$$,$3);
+        genExperssion3AC($$, 1);} 
+    | NOT expression {
+        $$ = makeNode ("NOT"); 
+        $$->line_number = $2->line_number; 
+        freshVar($$); 
+        char buffer[50]; 
+        sprintf(buffer, "\t%s = !%s\n", $$->var, $2->var); 
+        addSonNodeToFatherNode(&$$,$2);
+        addCode($$, buffer);}
+
 expression:
     expression PLUS expression {
         $$ = makeNode("+"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression MINUS expression {
         $$ = makeNode("-"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression MULTI expression {
         $$ = makeNode("*"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);} 
+        genExperssion3AC($$, 0);} 
     | expression DIV expression {
         $$ = makeNode("/"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression BIGER expression { 
         $$ = makeNode (">"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression GE expression { 
         $$ = makeNode (">="); 
         $$->line_number = $1->line_number;
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression LOWER expression { 
         $$ = makeNode ("<"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression LE expression { 
         $$ = makeNode ("<="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression EQUAL expression { 
         $$ = makeNode ("=="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression NOTEQUAL expression { 
         $$ = makeNode ("!="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1);
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$);}
+        genExperssion3AC($$, 0);}
     | expression AND expression {
         $$ = makeNode("&&"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$,$3);
-        genExperssion3AC($$);} 
+        genExperssion3AC($$, 0);} 
     | expression OR expression {
         $$ = makeNode("||"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$,$3);
-        genExperssion3AC($$);} 
+        genExperssion3AC($$, 0);} 
     | NOT expression {
         $$ = makeNode ("NOT"); 
         $$->line_number = $2->line_number; 
@@ -582,7 +650,7 @@ expression:
         $$->node_type = "BOOL"; 
         $$->line_number = number_line;
         addVar($$ ,yytext);
-        addCode($$, "ftoremove");
+        addCode($$, "falsetoremove");
 
     }
     | NULL_P  
