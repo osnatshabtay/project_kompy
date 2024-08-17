@@ -1,6 +1,7 @@
 %{
 #include "lex.yy.c"
 #include "semantic.c"
+#include "3_address_code.c"
 
 int yylex(void);
 int yyerror(char *s);
