@@ -884,15 +884,15 @@ int isBooleanOperator(node* node){
 }
 
 void generateNewVar(node* node){
-	char new[10];
-	sprintf(new, "t%d", GLOBAL_VAR_COUNT++);
-	node->var = strdup(new);
+	char new_var[10];
+	sprintf(new_var, "t%d", GLOBAL_VAR_COUNT++);
+	node->var = strdup(new_var);
 }
 
 char* generateNewLabel(){
-	char new[10] = "";
-	sprintf(new ,"L%d", GLOBAL_LABEL_COUNT++);
-	char* L = strdup(new);
+	char new_label[10] = "";
+	sprintf(new_label ,"L%d", GLOBAL_LABEL_COUNT++);
+	char* L = strdup(new_label);
 	return L;
 }
 
@@ -901,22 +901,25 @@ void addVar(node* node, char* var){
 }
 
 void addCode(node* node, char* code){
+	
 	char buffer[10000] = "";
-	if (!strcmp(node->token, "MAIN")){
+
+	if (!strcmp(node->token, "STATIC")){
+		sprintf(buffer, "%s:\n%s", node->sons_nodes[0]->token,"\tBeginFunc\n");
+		node->code = strdup(buffer);
+	}
+
+	else if (!strcmp(node->token, "MAIN")){
 		sprintf(buffer, "%s", "main:\n\tBeginFunc\n");
 		node->code = strdup(buffer);
 	}
 
-	if (!strcmp(node->token, "FUNCTION")){
+	else if (!strcmp(node->token, "FUNCTION")){
 		sprintf(buffer, "%s:\n%s", node->sons_nodes[0]->token,"\tBeginFunc\n");
 		node->code = strdup(buffer);
 	}
 
-	if (!strcmp(node->token, "STATIC-FN")){
-		sprintf(buffer, "%s:\n%s", node->sons_nodes[0]->token,"\tBeginFunc\n");
-		node->code = strdup(buffer);
-	}
-
+	
 	if (node->sons_count > 0){
 		for (int i = 0; i< node->sons_count; i++){
 			if (strcmp(node->sons_nodes[i]->code,"")){
@@ -927,7 +930,7 @@ void addCode(node* node, char* code){
 	sprintf(buffer + strlen(buffer), "%s", code);
 	node->code = strdup(buffer);
 
-	if (!strcmp(node->token, "MAIN") || !strcmp(node->token, "FUNCTION") || !strcmp(node->token, "STATIC-FN")){
+	if (!strcmp(node->token, "MAIN") || !strcmp(node->token, "FUNCTION") || !strcmp(node->token, "STATIC")){
 		sprintf(buffer + strlen(buffer), "\t%s", "EndFunc\n\n");
 		node->code = strdup(buffer);
 	}
@@ -935,109 +938,107 @@ void addCode(node* node, char* code){
 
 void generateIfAs3AC(node* node){
     char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = generateNewLabel(); // Label for the true branch
-    char* L2 = generateNewLabel(); // Label for the false branch
+    char* label1 = generateNewLabel(); // Label for the true branch
+    char* label2 = generateNewLabel(); // Label for the false branch
 	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
 
-    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L1);
-    sprintf(buffer + strlen(buffer), "\tgoto %s\n", L2);
-	sprintf(buffer + strlen(buffer), "%s:", L1);
+    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, label1);
+    sprintf(buffer + strlen(buffer), "\tGoto %s\n", label2);
+	sprintf(buffer + strlen(buffer), "%s:", label1);
 	
 	if (strcmp(node->sons_nodes[1]->code, "")) {
         sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[1]->code);
     }
 
-	sprintf(buffer + strlen(buffer), "%s:", L2);
+	sprintf(buffer + strlen(buffer), "%s:", label2);
     node->code = strdup(buffer);
 }
 
 void generateIfElseAs3AC(node* node){
-    char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = generateNewLabel(); // Label for the true branch
-    char* L2 = generateNewLabel(); // Label for the false branch
-    char* L3 = generateNewLabel(); // Label for the end of the if-else block
+    char buffer[10000] = ""; 
+    char* label1 = generateNewLabel(); 
+    char* label2 = generateNewLabel(); 
+    char* label3 = generateNewLabel(); 
 	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
 
-    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L1);
+    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, label1);
+    sprintf(buffer + strlen(buffer), "\tGoto %s\n", label2);
 
-    sprintf(buffer + strlen(buffer), "\tgoto %s\n", L2);
-
-	sprintf(buffer + strlen(buffer), "%s:", L1);
+	sprintf(buffer + strlen(buffer), "%s:", label1);
 	if (strcmp(node->sons_nodes[1]->code, "")) {
         sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[1]->code);
     }
-    sprintf(buffer + strlen(buffer), "\tGoto %s\n", L3);
 
-	sprintf(buffer + strlen(buffer), "%s:", L2);
+    sprintf(buffer + strlen(buffer), "\tGoto %s\n", label3);
+	sprintf(buffer + strlen(buffer), "%s:", label2);
+
     if (strcmp(node->sons_nodes[2]->code, "")) {
         sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[2]->code);
     }
 
-    sprintf(buffer + strlen(buffer), "%s:", L3);
+    sprintf(buffer + strlen(buffer), "%s:", label3);
     node->code = strdup(buffer);
 }
 
 void generateWhileAs3AC(node* node) {
-    char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = generateNewLabel(); // Label for the start of the loop
-    char* L2 = generateNewLabel(); // Label for the exit of the loop
-    char* L3 = generateNewLabel(); // Label for the loop body
+    char buffer[10000] = ""; 
+    char* label1 = generateNewLabel(); 
+    char* label2 = generateNewLabel(); 
+    char* label3 = generateNewLabel(); 
 	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
 
-    sprintf(buffer, "%s:", L1);
-    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L2);
-    sprintf(buffer + strlen(buffer), "\tgoto %s\n", L3);
-
-    sprintf(buffer + strlen(buffer), "%s:", L2);
-    if (strcmp(node->sons_nodes[1]->code, "")) {
+    sprintf(buffer, "%s:", label1);
+    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, label2);
+    sprintf(buffer + strlen(buffer), "\tGoto %s\n", label3);
+    sprintf(buffer + strlen(buffer), "%s:", label2);
+    
+	if (strcmp(node->sons_nodes[1]->code, "")) {
         sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[1]->code);
     }
 
-    sprintf(buffer + strlen(buffer), "\tGoto %s\n", L1);
-
-    sprintf(buffer + strlen(buffer), "%s:", L3);
+    sprintf(buffer + strlen(buffer), "\tGoto %s\n", label1);
+    sprintf(buffer + strlen(buffer), "%s:", label3);
     node->code = strdup(buffer);
 }
 
 void generateDoWhileAs3AC(node* node) {
-    char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = generateNewLabel(); // Label for the start of the loop
-    char* L2 = generateNewLabel(); // Label for the exit of the loop
-	char* L3 = generateNewLabel(); // Label for the loop body
+    char buffer[10000] = "";
+    char* label1 = generateNewLabel(); 
+    char* label2 = generateNewLabel(); 
+	char* label3 = generateNewLabel();
 
-    sprintf(buffer, "%s:", L1);
-
+    sprintf(buffer, "%s:", label1);
     if (strcmp(node->sons_nodes[0]->code, "")) {
         sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[0]->code);
     }
+
 	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[1]->code);
-    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L1);
-    sprintf(buffer + strlen(buffer), "\tGoto %s\n", L2);
-
-    sprintf(buffer + strlen(buffer), "%s:", L2);
-
+    sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, label1);
+    sprintf(buffer + strlen(buffer), "\tGoto %s\n", label2);
+    sprintf(buffer + strlen(buffer), "%s:", label2);
     node->code = strdup(buffer);
 }
 
 void generateForAs3AC(node* node){
-    char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = generateNewLabel(); // Label for the start of the loop
-    char* L2 = generateNewLabel(); // Label for the exit of the loop
-	char* L3 = generateNewLabel(); // Label for the loop body
+    char buffer[10000] = ""; 
+    char* label1 = generateNewLabel(); 
+    char* label2 = generateNewLabel(); 
+	char* label3 = generateNewLabel(); 
 	
 	if (strcmp(node->sons_nodes[0]->code,"")){
 		sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[0]->code);
-		sprintf(buffer + strlen(buffer), "%s:", L1);
+		sprintf(buffer + strlen(buffer), "%s:", label1);
+
 		char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[1]->code);
-    	sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L2);
-		sprintf(buffer + strlen(buffer), "\tgoto %s\n",  L3);
+    	sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, label2);
+		sprintf(buffer + strlen(buffer), "\tGoto %s\n",  label3);
 	}
 	
-	sprintf(buffer + strlen(buffer), "%s:", L2);
+	sprintf(buffer + strlen(buffer), "%s:", label2);
 	sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[2]->code);
 	sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[3]->code);
-	sprintf(buffer + strlen(buffer), "\tgoto %s\n",  L1);
-	sprintf(buffer + strlen(buffer), "%s:", L3);
+	sprintf(buffer + strlen(buffer), "\tGoto %s\n",  label1);
+	sprintf(buffer + strlen(buffer), "%s:", label3);
 	node->code = strdup(buffer);
 }
 
@@ -1094,14 +1095,14 @@ void genStringAssign3AC(node* node){
 
 void generatePointerAs3AC(node* node){
 	char buffer[1000] = "";
-	if (node->sons_nodes[0]->node_type!=NULL && !strcmp(node->sons_nodes[0]->node_type, "ID") && node->sons_nodes[1]->sons_count > 0 && !strcmp(node->sons_nodes[1]->token, "PTR")){
+	if (node->sons_nodes[0]->node_type!=NULL && !strcmp(node->sons_nodes[0]->node_type, "ID") && node->sons_nodes[1]->sons_count > 0 && !strcmp(node->sons_nodes[1]->token, "POINTER")){
 		generateNewVar(node->sons_nodes[1]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->var);
 		sprintf(buffer + strlen(buffer),"\t%s = *%s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
 		addCode(node->sons_nodes[0], buffer);
 	}
 
-	else if (node->sons_nodes[1]->node_type!=NULL &&!strcmp(node->sons_nodes[1]->node_type, "ID") && node->sons_nodes[0]->sons_count > 0 && !strcmp(node->sons_nodes[0]->token, "PTR")){
+	else if (node->sons_nodes[1]->node_type!=NULL &&!strcmp(node->sons_nodes[1]->node_type, "ID") && node->sons_nodes[0]->sons_count > 0 && !strcmp(node->sons_nodes[0]->token, "POINTER")){
 		generateNewVar(node->sons_nodes[0]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[0]->var, node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var);
 		sprintf(buffer + strlen(buffer),"\t*%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
@@ -1123,7 +1124,7 @@ void generatePointerAs3AC(node* node){
 		addCode(node->sons_nodes[0], buffer);
 	}
 
-	else if (!strcmp(node->sons_nodes[0]->token, "PTR") && !strcmp(node->sons_nodes[1]->token, "PTR")){
+	else if (!strcmp(node->sons_nodes[0]->token, "POINTER") && !strcmp(node->sons_nodes[1]->token, "POINTER")){
 		generateNewVar(node->sons_nodes[1]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->var);
 		generateNewVar(node->sons_nodes[0]);
@@ -1172,7 +1173,7 @@ void generateAssignmentAs3AC(node* node){
 			sprintf(buffer + strlen(buffer),"\t%s = *%s\n", node->sons_nodes[0]->var, node->var);
 		}
 
-		else if (!strcmp(node->sons_nodes[1]->token, "LEN OF")){
+		else if (!strcmp(node->sons_nodes[1]->token, "LEN")){
 			generateNewVar(node->sons_nodes[1]);
 			sprintf(buffer,"\t%s = Sizeof(%s)\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->token);
 			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
@@ -1185,7 +1186,7 @@ void generateAssignmentAs3AC(node* node){
 		}
 
 
-		else if (!strcmp(node->sons_nodes[0]->token, "PTR") || !strcmp(node->sons_nodes[1]->token, "PTR") || !strcmp(node->sons_nodes[1]->token, "&")){
+		else if (!strcmp(node->sons_nodes[0]->token, "POINTER") || !strcmp(node->sons_nodes[1]->token, "POINTER") || !strcmp(node->sons_nodes[1]->token, "&")){
 			generatePointerAs3AC(node);
 		}
 
