@@ -7,8 +7,8 @@ char* CALLED_FUNCTIONS[100];
 char* HAS_CALLED_FUNCTIONS[100];
 int CALLED_FUNCTIONS_INDEX = 0;
 int HAS_CALLED_FUNCTIONS_INDEX = 0;
-int var = 0;
-int label = 1;
+int GLOBAL_VAR_COUNT = 0;
+int GLOBAL_LABEL_COUNT = 1;
 
 node* makeNode(char* token) {
 	node *newnode = (node*)malloc(sizeof(node));
@@ -883,6 +883,19 @@ int isBooleanOperator(node* node){
 
 }
 
+void generateNewVar(node* node){
+	char new[10];
+	sprintf(new, "t%d", GLOBAL_VAR_COUNT++);
+	node->var = strdup(new);
+}
+
+char* generateNewLabel(){
+	char new[10] = "";
+	sprintf(new ,"L%d", GLOBAL_LABEL_COUNT++);
+	char* L = strdup(new);
+	return L;
+}
+
 void addVar(node* node, char* var){
 	node->var = strdup(var);
 }
@@ -920,30 +933,16 @@ void addCode(node* node, char* code){
 	}
 }
 
-void freshVar(node* node){
-	char new[10];
-	sprintf(new, "t%d", var++);
-	node->var = strdup(new);
-}
-
-char* freshLabel(){
-	char new[10] = "";
-	sprintf(new ,"L%d", label++);
-	char* L = strdup(new);
-	return L;
-}
-
-void genIF3AC(node* node){
+void generateIfAs3AC(node* node){
     char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = freshLabel(); // Label for the true branch
-    char* L2 = freshLabel(); // Label for the false branch
+    char* L1 = generateNewLabel(); // Label for the true branch
+    char* L2 = generateNewLabel(); // Label for the false branch
 	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
-	//genOR3AC(node);
+
     sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L1);
-
     sprintf(buffer + strlen(buffer), "\tgoto %s\n", L2);
-
 	sprintf(buffer + strlen(buffer), "%s:", L1);
+	
 	if (strcmp(node->sons_nodes[1]->code, "")) {
         sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[1]->code);
     }
@@ -952,26 +951,11 @@ void genIF3AC(node* node){
     node->code = strdup(buffer);
 }
 
-void genOR3AC(node* tree) {
-    if (tree == NULL) return;
-
-    char* token = tree->token;
-
-    if (strcmp(token, "||") == 0) {
-        printf("%s\n", tree->sons_nodes[0]->sons_nodes[0]->token);
-		//printf("%s\n", tree->sons_nodes[0]->sons_nodes[1]->token);
-    }
-
-    for (int j = 0; j < tree->sons_count; j++) {
-        genOR3AC(tree->sons_nodes[j]);
-    }
-}
-
-void genIFELSE3AC(node* node){
+void generateIfElseAs3AC(node* node){
     char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = freshLabel(); // Label for the true branch
-    char* L2 = freshLabel(); // Label for the false branch
-    char* L3 = freshLabel(); // Label for the end of the if-else block
+    char* L1 = generateNewLabel(); // Label for the true branch
+    char* L2 = generateNewLabel(); // Label for the false branch
+    char* L3 = generateNewLabel(); // Label for the end of the if-else block
 	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
 
     sprintf(buffer + strlen(buffer), "\tif %s Goto %s\n", cond, L1);
@@ -993,11 +977,11 @@ void genIFELSE3AC(node* node){
     node->code = strdup(buffer);
 }
 
-void genWHILE3AC(node* node) {
+void generateWhileAs3AC(node* node) {
     char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = freshLabel(); // Label for the start of the loop
-    char* L2 = freshLabel(); // Label for the exit of the loop
-    char* L3 = freshLabel(); // Label for the loop body
+    char* L1 = generateNewLabel(); // Label for the start of the loop
+    char* L2 = generateNewLabel(); // Label for the exit of the loop
+    char* L3 = generateNewLabel(); // Label for the loop body
 	char* cond = (!strcmp(node->sons_nodes[0]->code, "truetoremove")) ? "true" : (!strcmp(node->sons_nodes[0]->code, "falsetoremove")) ? "false" : extractCondition(node->sons_nodes[0]->code);
 
     sprintf(buffer, "%s:", L1);
@@ -1015,11 +999,11 @@ void genWHILE3AC(node* node) {
     node->code = strdup(buffer);
 }
 
-void genDOWHILE3AC(node* node) {
+void generateDoWhileAs3AC(node* node) {
     char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = freshLabel(); // Label for the start of the loop
-    char* L2 = freshLabel(); // Label for the exit of the loop
-	char* L3 = freshLabel(); // Label for the loop body
+    char* L1 = generateNewLabel(); // Label for the start of the loop
+    char* L2 = generateNewLabel(); // Label for the exit of the loop
+	char* L3 = generateNewLabel(); // Label for the loop body
 
     sprintf(buffer, "%s:", L1);
 
@@ -1035,11 +1019,11 @@ void genDOWHILE3AC(node* node) {
     node->code = strdup(buffer);
 }
 
-void genFOR3AC(node* node){
+void generateForAs3AC(node* node){
     char buffer[10000] = ""; // Buffer to store the generated code
-    char* L1 = freshLabel(); // Label for the start of the loop
-    char* L2 = freshLabel(); // Label for the exit of the loop
-	char* L3 = freshLabel(); // Label for the loop body
+    char* L1 = generateNewLabel(); // Label for the start of the loop
+    char* L2 = generateNewLabel(); // Label for the exit of the loop
+	char* L3 = generateNewLabel(); // Label for the loop body
 	
 	if (strcmp(node->sons_nodes[0]->code,"")){
 		sprintf(buffer + strlen(buffer), "%s", node->sons_nodes[0]->code);
@@ -1057,34 +1041,34 @@ void genFOR3AC(node* node){
 	node->code = strdup(buffer);
 }
 
-void genFUNCTIONCALL3AC(node* node_FC, int flag){
+void generateFunctionCallAs3AC(node* node, int flag){
 	char buffer[10000] = "";
-	if (node_FC->sons_nodes[1]->sons_count > 0){
-		for (int i = 0;i < node_FC->sons_nodes[1]->sons_count;i++){
-			if (strcmp(node_FC->sons_nodes[1]->sons_nodes[i]->node_type, "ID")){
-				freshVar(node_FC->sons_nodes[1]->sons_nodes[i]);
-				sprintf(buffer + strlen(buffer), "\t%s = %s\n", node_FC->sons_nodes[1]->sons_nodes[i]->var, node_FC->sons_nodes[1]->sons_nodes[i]->token);
+	if (node->sons_nodes[1]->sons_count > 0){
+		for (int i = 0;i < node->sons_nodes[1]->sons_count;i++){
+			if (strcmp(node->sons_nodes[1]->sons_nodes[i]->node_type, "ID")){
+				generateNewVar(node->sons_nodes[1]->sons_nodes[i]);
+				sprintf(buffer + strlen(buffer), "\t%s = %s\n", node->sons_nodes[1]->sons_nodes[i]->var, node->sons_nodes[1]->sons_nodes[i]->token);
 			}
-			sprintf(buffer + strlen(buffer), "\tPushParam %s\n", node_FC->sons_nodes[1]->sons_nodes[i]->var);
+			sprintf(buffer + strlen(buffer), "\tPushParam %s\n", node->sons_nodes[1]->sons_nodes[i]->var);
 		}
-		genFUNCTION3AC(node_FC->sons_nodes[0], buffer, flag);
-		node_FC->var = node_FC->sons_nodes[0]->var;
-		sprintf(buffer + strlen(buffer), "\tPopParams %d\n", calculateTotalVarSize(node_FC->sons_nodes[1]));
-		node_FC->code = strdup(buffer);
+		generateFunctionAs3AC(node->sons_nodes[0], buffer, flag);
+		node->var = node->sons_nodes[0]->var;
+		sprintf(buffer + strlen(buffer), "\tPopParams %d\n", calculateTotalVarSize(node->sons_nodes[1]));
+		node->code = strdup(buffer);
 	}
 	else {
-		genFUNCTION3AC(node_FC->sons_nodes[0], buffer, flag);
-		node_FC->var = node_FC->sons_nodes[0]->var;
-		node_FC->code = strdup(buffer);
+		generateFunctionAs3AC(node->sons_nodes[0], buffer, flag);
+		node->var = node->sons_nodes[0]->var;
+		node->code = strdup(buffer);
 	}
 }
 
-void genFUNCTION3AC(node* node, char* buffer, int flag){
+void generateFunctionAs3AC(node* node, char* buffer, int flag){
 	if (!strcmp(node->node_type, "VOID")){
 		sprintf(buffer + strlen(buffer), "\tLCall %s\n", node->token);
 	} 
 	else{
-		freshVar(node);
+		generateNewVar(node);
 		if (flag)
 			sprintf(buffer + strlen(buffer), "\t%s = LCall %s\n", node->var, node->token);
 		else
@@ -1092,84 +1076,64 @@ void genFUNCTION3AC(node* node, char* buffer, int flag){
 	}
 }
 
-void genSTRINGAssign3AC(node* node){
+void genStringAssign3AC(node* node){
 	char buffer[10000] ="";
 	if (strcmp(node->sons_nodes[1]->sons_nodes[0]->token, "INDEX")){
 		if (node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->sons_count > 0)
 			sprintf(buffer,"%s", node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->code);
-		freshVar(node->sons_nodes[0]->sons_nodes[0]);
+		generateNewVar(node->sons_nodes[0]->sons_nodes[0]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[0]->sons_nodes[0]->var, node->sons_nodes[0]->var);
-		freshVar(node);
+		generateNewVar(node);
 		sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", node->var, node->sons_nodes[0]->sons_nodes[0]->var, node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var);
 		sprintf(buffer + strlen(buffer),"\t*%s = %s\n", node->var, node->sons_nodes[1]->var);
 		addCode(node, buffer);
 	}
 	else
-		STRINGAssignSTRING3AC(node);
+		StringAssignStringAs3AC(node);
 }
 
-void genSTRINGMemAssign3AC(node* node){
-	char buffer[10000] ="";
-	if (!strcmp(node->sons_nodes[0]->token, "<-")){
-		if (node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->sons_count > 0)
-			sprintf(buffer,"%s", node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->code);
-		freshVar(node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]);
-		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var, node->sons_nodes[0]->sons_nodes[0]->var);
-		sprintf(buffer + strlen(buffer),"\t%s -> Sizeof(%s)\n", node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var, node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var);
-		sprintf(buffer + strlen(buffer),"\t*%s = %s\n", node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var, node->sons_nodes[0]->sons_nodes[1]->var);
-	}
-	else{
-		if (node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->sons_count > 0)
-			sprintf(buffer,"%s", node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->code);
-		freshVar(node->sons_nodes[0]->sons_nodes[0]);
-		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[0]->sons_nodes[0]->var, node->sons_nodes[0]->var);
-		sprintf(buffer + strlen(buffer),"\t%s -> Sizeof(%s)\n", node->sons_nodes[0]->sons_nodes[0]->var, node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var);
-	}
-	addCode(node, buffer);
-}
-
-void genPOINTER3AC(node* node){
+void generatePointerAs3AC(node* node){
 	char buffer[1000] = "";
 	if (node->sons_nodes[0]->node_type!=NULL && !strcmp(node->sons_nodes[0]->node_type, "ID") && node->sons_nodes[1]->sons_count > 0 && !strcmp(node->sons_nodes[1]->token, "PTR")){
-		freshVar(node->sons_nodes[1]);
+		generateNewVar(node->sons_nodes[1]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->var);
 		sprintf(buffer + strlen(buffer),"\t%s = *%s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
 		addCode(node->sons_nodes[0], buffer);
 	}
 
 	else if (node->sons_nodes[1]->node_type!=NULL &&!strcmp(node->sons_nodes[1]->node_type, "ID") && node->sons_nodes[0]->sons_count > 0 && !strcmp(node->sons_nodes[0]->token, "PTR")){
-		freshVar(node->sons_nodes[0]);
+		generateNewVar(node->sons_nodes[0]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[0]->var, node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var);
 		sprintf(buffer + strlen(buffer),"\t*%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
 		addCode(node, buffer);
 	}
 
 	else if (node->sons_nodes[0]->node_type!=NULL && !strcmp(node->sons_nodes[0]->node_type, "ID") && node->sons_nodes[1]->sons_count > 0 && !strcmp(node->sons_nodes[1]->token, "&")){
-		freshVar(node->sons_nodes[1]);
+		generateNewVar(node->sons_nodes[1]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->var);
 		if (!strcmp(node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->token, "INDEX")){
 			if (node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->sons_count > 0)
 				sprintf(buffer + strlen(buffer),"%s", node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->code);
-			freshVar(node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]);
+			generateNewVar(node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]);
 			sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->var, node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var);
 		}
-		freshVar(node);
+		generateNewVar(node);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->var, node->sons_nodes[0]->var);
 		sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->sons_nodes[1]->var, node->var);
 		addCode(node->sons_nodes[0], buffer);
 	}
 
 	else if (!strcmp(node->sons_nodes[0]->token, "PTR") && !strcmp(node->sons_nodes[1]->token, "PTR")){
-		freshVar(node->sons_nodes[1]);
+		generateNewVar(node->sons_nodes[1]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->var);
-		freshVar(node->sons_nodes[0]);
+		generateNewVar(node->sons_nodes[0]);
 		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->sons_nodes[0]->var, node->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var);
 		sprintf(buffer + strlen(buffer),"\t*%s = *%s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
 		addCode(node, buffer);
 	}
 }
 
-void STRINGAssignSTRING3AC(node* n){
+void StringAssignStringAs3AC(node* n){
 
     char buffer[10000] =""; 
     node* temp = makeNode("");
@@ -1177,19 +1141,19 @@ void STRINGAssignSTRING3AC(node* n){
     if (n->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->sons_count > 0)
         sprintf(buffer + strlen(buffer),"%s", n->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->code);
 
-    freshVar(n->sons_nodes[1]->sons_nodes[0]);
+    generateNewVar(n->sons_nodes[1]->sons_nodes[0]);
     sprintf(buffer + strlen(buffer),"\t%s = &%s\n", n->sons_nodes[1]->sons_nodes[0]->var, n->sons_nodes[1]->var);
 
-    freshVar(n);
+    generateNewVar(n);
     sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", n->var, n->sons_nodes[1]->sons_nodes[0]->var, n->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->var);
 
     if (n->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->sons_count > 0)
         sprintf(buffer + strlen(buffer),"%s", n->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->code);
 
-    freshVar(n->sons_nodes[0]->sons_nodes[0]);
+    generateNewVar(n->sons_nodes[0]->sons_nodes[0]);
     sprintf(buffer + strlen(buffer),"\t%s = &%s\n", n->sons_nodes[0]->sons_nodes[0]->var, n->sons_nodes[0]->var);
 
-    freshVar(temp);
+    generateNewVar(temp);
     sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", temp->var, n->sons_nodes[0]->sons_nodes[0]->var, n->sons_nodes[0]->sons_nodes[0]->sons_nodes[0]->var);
 
     sprintf(buffer + strlen(buffer),"\t*%s = *%s\n", temp->var ,n->var);    
@@ -1197,32 +1161,32 @@ void STRINGAssignSTRING3AC(node* n){
     addCode(n, buffer);
 }
 
-void genAssignment3AC(node* node){
+void generateAssignmentAs3AC(node* node){
 	char buffer[10000] ="";
 	if (node->sons_nodes[1]->sons_count > 0) {
 		if (!strcmp(node->sons_nodes[1]->sons_nodes[0]->token, "INDEX")){
-			freshVar(node->sons_nodes[1]->sons_nodes[0]);
+			generateNewVar(node->sons_nodes[1]->sons_nodes[0]);
 			sprintf(buffer,"\t%s = &%s\n", node->sons_nodes[1]->sons_nodes[0]->var, node->sons_nodes[1]->token);
-			freshVar(node);
+			generateNewVar(node);
 			sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", node->var, node->sons_nodes[1]->sons_nodes[0]->var, node->sons_nodes[1]->sons_nodes[0]->sons_nodes[0]->var);
 			sprintf(buffer + strlen(buffer),"\t%s = *%s\n", node->sons_nodes[0]->var, node->var);
 		}
 
 		else if (!strcmp(node->sons_nodes[1]->token, "LEN OF")){
-			freshVar(node->sons_nodes[1]);
+			generateNewVar(node->sons_nodes[1]);
 			sprintf(buffer,"\t%s = Sizeof(%s)\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->token);
 			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
 		}
 
 		else if (isBooleanOperator(node->sons_nodes[1])){
-			// freshVar(node->sons_nodes[1]);
+			// generateNewVar(node->sons_nodes[1]);
 			// sprintf(buffer,"\t%s = %s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->sons_nodes[0]->code);
 			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->sons_nodes[0]->var, node->sons_nodes[1]->var);
 		}
 
 
 		else if (!strcmp(node->sons_nodes[0]->token, "PTR") || !strcmp(node->sons_nodes[1]->token, "PTR") || !strcmp(node->sons_nodes[1]->token, "&")){
-			genPOINTER3AC(node);
+			generatePointerAs3AC(node);
 		}
 
 		else{
@@ -1235,7 +1199,7 @@ void genAssignment3AC(node* node){
 		}
 
 		else {
-			freshVar(node->sons_nodes[1]);
+			generateNewVar(node->sons_nodes[1]);
 			sprintf(buffer,"\t%s = %s\n", node->sons_nodes[1]->var, node->sons_nodes[1]->token);
 			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->sons_nodes[0]->token, node->sons_nodes[1]->var);
 		}
@@ -1243,15 +1207,15 @@ void genAssignment3AC(node* node){
 	addCode(node, buffer);
 }
 
-void genExperssion3AC(node* node, int from_assignment){
+void generateExpressionAs3AC(node* node, int from_assignment){
 	char buffer[10000] ="";
 	if (isBooleanOperator(node) && !from_assignment) {
-		// freshVar(node);
+		// generateNewVar(node);
 		sprintf(buffer,"\t%s = %s %s %s\n", node->var, node->sons_nodes[0]->var, node->token, node->sons_nodes[1]->var);
 		addCode(node, buffer);
 	}
 	else {
-		freshVar(node);
+		generateNewVar(node);
 		sprintf(buffer,"\t%s = %s %s %s\n", node->var, node->sons_nodes[0]->var, node->token, node->sons_nodes[1]->var);
 		addCode(node, buffer);
 	}
@@ -1334,6 +1298,6 @@ void print3AC(node* node){
 
 	const char *to_remove3 = "\n\t =";
 	removeStringFromCode(node->code, to_remove3);
-	
+
 	printf("%s", node->code);
 }

@@ -352,7 +352,7 @@ if_statment:
         if_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&if_node, $3); 
         addNodesList(if_node,$5); 
-        genIF3AC(if_node);
+        generateIfAs3AC(if_node);
         addSonNodeToFatherNode(&$$,if_node);
     }  %prec PREC_IF
     ;
@@ -366,7 +366,7 @@ if_else_statment:
         addSonNodeToFatherNode(&if_node, $3); 
         addNodesList(if_node,$5); 
         addNodesList(if_node, $7); 
-        genIFELSE3AC(if_node); 
+        generateIfElseAs3AC(if_node); 
         addSonNodeToFatherNode(&$$,if_node);}
     ;
 
@@ -380,7 +380,7 @@ loop:
         addSonNodeToFatherNode(&for_node, $5); 
         addSonsNodesToFatherNode(for_node, $7); 
         addSonsNodesToFatherNode(for_node, $9); 
-        genFOR3AC(for_node);
+        generateForAs3AC(for_node);
         addSonNodeToFatherNode(&$$,for_node);
     }
     | WHILE '(' expression ')' statment 
@@ -390,7 +390,7 @@ loop:
         while_node->line_number = $3->line_number; 
         addSonNodeToFatherNode(&while_node, $3); 
         addSonsNodesToFatherNode(while_node, $5); 
-        genWHILE3AC(while_node); 
+        generateWhileAs3AC(while_node); 
         addSonNodeToFatherNode(&$$,while_node);}
  
     | DO block WHILE '(' expression ')' ';' 
@@ -400,7 +400,7 @@ loop:
         while_node->line_number = $5->line_number; 
         addSonsNodesToFatherNode(while_node, $2); 
         addSonNodeToFatherNode(&while_node, $5);
-        genDOWHILE3AC(while_node);  
+        generateDoWhileAs3AC(while_node);  
         addSonNodeToFatherNode(&$$,while_node);
     }
 
@@ -414,7 +414,7 @@ init_for:
         ass_node->line_number = number_line; 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3);
-        genAssignment3AC(ass_node); 
+        generateAssignmentAs3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
     | id ASSIGN expression 
@@ -424,7 +424,7 @@ init_for:
         ass_node->line_number = number_line; 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3);
-        genAssignment3AC(ass_node); 
+        generateAssignmentAs3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
     | pointer ASSIGN expression 
@@ -434,7 +434,7 @@ init_for:
         ass_node->line_number = number_line; 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
-        genPOINTER3AC(ass_node);
+        generatePointerAs3AC(ass_node);
         addSonNodeToFatherNode(&$$,ass_node);
     }
     ;
@@ -449,7 +449,7 @@ ass_string:
         addSonNodeToFatherNode(&$1, index); 
         addSonNodeToFatherNode(&ass_node, $1); 
         addSonNodeToFatherNode(&ass_node,$6); 
-        genSTRINGAssign3AC(ass_node);
+        genStringAssign3AC(ass_node);
         addSonNodeToFatherNode(&$$,ass_node);
     }
     ;
@@ -460,53 +460,53 @@ bool_expression_from_assignment:
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 1);}
+        generateExpressionAs3AC($$, 1);}
     | expression GE expression { 
         $$ = makeNode (">="); 
         $$->line_number = $1->line_number;
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 1);}
+        generateExpressionAs3AC($$, 1);}
     | expression LOWER expression { 
         $$ = makeNode ("<"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 1);}
+        generateExpressionAs3AC($$, 1);}
     | expression LE expression { 
         $$ = makeNode ("<="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 1);}
+        generateExpressionAs3AC($$, 1);}
     | expression EQUAL expression { 
         $$ = makeNode ("=="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 1);}
+        generateExpressionAs3AC($$, 1);}
     | expression NOTEQUAL expression { 
         $$ = makeNode ("!="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1);
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 1);}
+        generateExpressionAs3AC($$, 1);}
     | expression AND expression {
         $$ = makeNode("&&"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$,$3);
-        genExperssion3AC($$, 1);} 
+        generateExpressionAs3AC($$, 1);} 
     | expression OR expression {
         $$ = makeNode("||"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$,$3);
-        genExperssion3AC($$, 1);} 
+        generateExpressionAs3AC($$, 1);} 
     | NOT expression {
         $$ = makeNode ("NOT"); 
         $$->line_number = $2->line_number; 
-        freshVar($$); 
+        generateNewVar($$); 
         char buffer[50]; 
         sprintf(buffer, "\t%s = !%s\n", $$->var, $2->var); 
         addSonNodeToFatherNode(&$$,$2);
@@ -518,77 +518,77 @@ expression:
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression MINUS expression {
         $$ = makeNode("-"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression MULTI expression {
         $$ = makeNode("*"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);} 
+        generateExpressionAs3AC($$, 0);} 
     | expression DIV expression {
         $$ = makeNode("/"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression BIGER expression { 
         $$ = makeNode (">"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression GE expression { 
         $$ = makeNode (">="); 
         $$->line_number = $1->line_number;
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression LOWER expression { 
         $$ = makeNode ("<"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression LE expression { 
         $$ = makeNode ("<="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression EQUAL expression { 
         $$ = makeNode ("=="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression NOTEQUAL expression { 
         $$ = makeNode ("!="); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1);
         addSonNodeToFatherNode(&$$, $3);
-        genExperssion3AC($$, 0);}
+        generateExpressionAs3AC($$, 0);}
     | expression AND expression {
         $$ = makeNode("&&"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$,$3);
-        genExperssion3AC($$, 0);} 
+        generateExpressionAs3AC($$, 0);} 
     | expression OR expression {
         $$ = makeNode("||"); 
         $$->line_number = $1->line_number; 
         addSonNodeToFatherNode(&$$,$1); 
         addSonNodeToFatherNode(&$$,$3);
-        genExperssion3AC($$, 0);} 
+        generateExpressionAs3AC($$, 0);} 
     | NOT expression {
         $$ = makeNode ("NOT"); 
         $$->line_number = $2->line_number; 
-        freshVar($$); 
+        generateNewVar($$); 
         char buffer[50]; 
         sprintf(buffer, "\t%s = !%s\n", $$->var, $2->var); 
         addSonNodeToFatherNode(&$$,$2);
@@ -677,7 +677,7 @@ expression:
     | pointer %prec MULL
     /* | NEWuminus {
         $$ = $1; 
-        freshVar($$); 
+        generateNewVar($$); 
         char buffer[20]; 
         sprintf(buffer, "\t%s = -%s\n", $$->var, $1->sons_nodes[0]->sons_nodes[0]->var); 
         addCode($$, buffer);} 
@@ -704,7 +704,7 @@ func_call:
         args->line_number = $1->line_number; 
         addNodesList(args, $3); 
         addSonNodeToFatherNode(&fun_call, args); 
-        genFUNCTIONCALL3AC(fun_call, 0);
+        generateFunctionCallAs3AC(fun_call, 0);
         addSonNodeToFatherNode(&$$,fun_call);
     }
     |id ASSIGN id '(' parameter_list ')' 
@@ -719,7 +719,7 @@ func_call:
         args->line_number = $1->line_number; 
         addNodesList(args, $5); 
         addSonNodeToFatherNode(&fun_call, args); 
-        genFUNCTIONCALL3AC(fun_call, 1); 
+        generateFunctionCallAs3AC(fun_call, 1); 
         addSonNodeToFatherNode(&ass_node, fun_call); 
         char buffer[20]; 
         sprintf(buffer,"\t%s = %s\n", $1->var, fun_call->var); 
@@ -734,7 +734,7 @@ func_call:
         addSonNodeToFatherNode(&fun_call,$1); 
         args->line_number = $1->line_number; 
         addSonNodeToFatherNode(&fun_call, args); 
-        genFUNCTIONCALL3AC(fun_call, 0); 
+        generateFunctionCallAs3AC(fun_call, 0); 
         addSonNodeToFatherNode(&$$,fun_call);
     }
     |id ASSIGN id '(' ')' 
@@ -748,7 +748,7 @@ func_call:
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&fun_call,$3); 
         addSonNodeToFatherNode(&fun_call, args); 
-        genFUNCTIONCALL3AC(fun_call, 1); 
+        generateFunctionCallAs3AC(fun_call, 1); 
         addSonNodeToFatherNode(&ass_node, fun_call); 
         char buffer[20]; 
         sprintf(buffer,"\t%s = %s\n", $1->var, fun_call->var); 
@@ -996,7 +996,7 @@ variable:
         node* ass_node= makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
-        genAssignment3AC(ass_node); 
+        generateAssignmentAs3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
     /* ????|id ASSIGN expression ',' variables 
@@ -1005,7 +1005,7 @@ variable:
         node* ass_node = makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addSonNodeToFatherNode(&ass_node,$3); 
-        genAssignment3AC(ass_node); 
+        generateAssignmentAs3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node); 
         addNodesList($$,$5);
     } */
@@ -1015,7 +1015,7 @@ variable:
         node* ass_node= makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addNodesList(ass_node,$3); 
-        genAssignment3AC(ass_node); 
+        generateAssignmentAs3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node);
     }
     /* ????|id ASSIGN func_call ',' variables 
@@ -1023,7 +1023,7 @@ variable:
         $$ = makeNode("s"); node* ass_node = makeNode("<-"); 
         addSonNodeToFatherNode(&ass_node,$1); 
         addNodesList(ass_node,$3); 
-        genAssignment3AC(ass_node); 
+        generateAssignmentAs3AC(ass_node); 
         addSonNodeToFatherNode(&$$,ass_node); 
         addNodesList($$,$5);
     } */
