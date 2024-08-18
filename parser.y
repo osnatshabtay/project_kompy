@@ -450,7 +450,7 @@ ass_string:
         addSonNodeToFatherNode(&$1, index); 
         addSonNodeToFatherNode(&ass_node, $1); 
         addSonNodeToFatherNode(&ass_node,$6); 
-        genStringAssign3AC(ass_node);
+        generateStringAssign3AC(ass_node);
         addSonNodeToFatherNode(&$$,ass_node);
     }
     ;
